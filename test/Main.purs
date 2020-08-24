@@ -4,7 +4,7 @@ import Prelude
 import Effect (Effect)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class GreaterThan, class LessThan, P1, P10, P2, P3, P4, PRational, Zero, class Equal, P5, P9, RProxy(..))
+import Type.Data.Rational (class Add, class Equal, class GreaterThan, class LessThan, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), Zero, RatioI, addRationals, inflectLessThan, toRational)
 
 test0 :: BProxy True
 test0 = BProxy :: ∀ b. LessThan (PRational P1 P1) (PRational P2 P1) b => BProxy b
@@ -28,4 +28,5 @@ test6 :: RProxy (PRational P1 P1)
 test6 = RProxy :: forall a. LessThan a (PRational P3 P2) True => GreaterThan a Zero True => RProxy a
 
 main :: Effect Unit
-main = pure unit
+main = do
+  void $ pure (inflectLessThan (RProxy :: RProxy (PRational P1 P1)) addRationals (toRational :: RatioI (PRational P1 P2)) (toRational :: RatioI (PRational P1 P1)))

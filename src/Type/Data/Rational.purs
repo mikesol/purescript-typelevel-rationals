@@ -377,6 +377,59 @@ makeRational a 0 = Nothing
 
 makeRational a b = Just $ R a b
 
+-- allows arbitrary constraints to be added to rationals
+inflectLessThan ::
+  forall a.
+  Rational a =>
+  RProxy a ->
+  ( forall b c.
+    Rational b =>
+    ( RatioI b ->
+      c
+    ) ->
+    (LessThan b a True => RatioI b -> c)
+  )
+inflectLessThan _ a b = a b
+
+inflectLessThanOrEqualTo ::
+  forall a.
+  Rational a =>
+  RProxy a ->
+  ( forall b c.
+    Rational b =>
+    ( RatioI b ->
+      c
+    ) ->
+    (LessThanOrEqualTo b a True => RatioI b -> c)
+  )
+inflectLessThanOrEqualTo _ a b = a b
+
+inflectGreaterThan ::
+  forall a.
+  Rational a =>
+  RProxy a ->
+  ( forall b c.
+    Rational b =>
+    ( RatioI b ->
+      c
+    ) ->
+    (GreaterThan b a True => RatioI b -> c)
+  )
+inflectGreaterThan _ a b = a b
+
+inflectGreaterThanOrEqualTo ::
+  forall a.
+  Rational a =>
+  RProxy a ->
+  ( forall b c.
+    Rational b =>
+    ( RatioI b ->
+      c
+    ) ->
+    (GreaterThanOrEqualTo b a True => RatioI b -> c)
+  )
+inflectGreaterThanOrEqualTo _ a b = a b
+
 ---------------
 ---------------
 ---------------
