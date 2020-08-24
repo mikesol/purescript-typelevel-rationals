@@ -1,6 +1,7 @@
 module Type.Data.Rational where
 
 import Prelude
+import Data.Maybe (Maybe(..))
 import Data.Ratio ((%))
 import Data.Ratio as DR
 import Prim.Boolean (kind Boolean, True, False)
@@ -370,6 +371,11 @@ divRationals ::
 divRationals (R a b) (R x y) = let res = (a % b) / (x % y) in R (DR.numerator res) (DR.denominator res)
 
 infix 6 divRationals as /~
+
+makeRational :: Int -> Int -> (forall a. Rational a => Maybe (Ratio a Int Int))
+makeRational a 0 = Nothing
+
+makeRational a b = Just $ R a b
 
 ---------------
 ---------------
