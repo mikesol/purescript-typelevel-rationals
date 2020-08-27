@@ -134,25 +134,26 @@ returnAQuarter _ =
         )
     )
 
-myQuarterBack ::
-  ConstrainedRatioI
-    ( AndConstraint
-        ( NotConstraint
-            (LessThanConstraint (PRational P1 P4))
-        )
-        (LessThanOrEqualToConstraint (PRational P1 P4))
-    )
-myQuarterBack =
-  invoke returnAQuarter
-    ( (CR 1 2) ::
-        ConstrainedRatioI
+myQuarterBack = invoke returnAQuarter <$> oneHalfPrecise
+
+threeHalvesPrecise =
+  asConstraintedRational 3 2 ::
+    Maybe
+      ( ConstrainedRatioI
           ( AndConstraint
               ( NotConstraint
-                  (LessThanConstraint (PRational P1 P2))
+                  (LessThanConstraint (PRational P3 P2))
               )
-              (LessThanConstraint (PRational P1 P2))
+              (LessThanConstraint (PRational P3 P2))
           )
-    )
+      )
+
+-- myQuarterBackRed = invoke returnAQuarter <$> threeHalvesPrecise
+type Gte0lt1
+  = (AndConstraint (NotConstraint (LessThanConstraint Zero)) (LessThanConstraint (PRational P1 P1)))
+
+type IsOneHalf
+  = (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P2))) (LessThanConstraint (PRational P1 P2)))
 
 main :: Effect Unit
 main = do
