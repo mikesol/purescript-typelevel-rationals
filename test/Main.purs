@@ -4,7 +4,7 @@ import Prelude
 import Effect (Effect)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class Equal, class GreaterThan, class LessThan, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), Zero, RatioI, addRationals, inflectLessThan, toRational)
+import Type.Data.Rational (class Add, class AddConstraint, class ConstrainedRational, class Equal, class GreaterThan, class LessThan, AndConstraint, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, LessThanConstraint, LessThanOrEqualToConstraint, N2, N3, N4, NRational, NotConstraint, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), RatioI, Zero, addConstrainedRationals, invoke, invokeTest, resolve, kind ConstrainedRational)
 
 test0 :: BProxy True
 test0 = BProxy :: ∀ b. LessThan (PRational P1 P1) (PRational P2 P1) b => BProxy b
@@ -27,6 +27,69 @@ test5 = BProxy :: ∀ v b. Add (PRational P1 P3) (PRational P2 P5) v => Equal v 
 test6 :: RProxy (PRational P1 P1)
 test6 = RProxy :: forall a. LessThan a (PRational P3 P2) True => GreaterThan a Zero True => RProxy a
 
+testf0 :: CRProxy (LessThanConstraint (PRational P3 P2)) -> CRProxy (LessThanConstraint Zero)
+testf0 _ = CRProxy
+
+testf0_1 :: CRProxy (LessThanConstraint Zero)
+testf0_1 = invokeTest (BProxy :: BProxy True) testf0 (CRProxy :: CRProxy (LessThanConstraint (PRational P1 P2)))
+
+testf0_2 :: CRProxy (LessThanConstraint Zero)
+testf0_2 = invokeTest (BProxy :: BProxy True) testf0 (CRProxy :: CRProxy (AndConstraint (LessThanConstraint Zero) (LessThanConstraint (NRational N2 P5))))
+
+testf0_3 :: CRProxy (LessThanConstraint Zero)
+testf0_3 = invokeTest (BProxy :: BProxy True) testf0 (CRProxy :: CRProxy (AndConstraint (LessThanConstraint Zero) (NotConstraint (LessThanConstraint (NRational N2 P5)))))
+
+testf0_4 :: CRProxy (LessThanConstraint Zero)
+testf0_4 = invokeTest (BProxy :: BProxy True) testf0 (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint (NRational N2 P5))) (LessThanConstraint Zero)))
+
+testf0__1 :: CRProxy (LessThanConstraint Zero)
+testf0__1 = invokeTest (BProxy :: BProxy False) testf0 (CRProxy :: CRProxy (LessThanConstraint (PRational P5 P2)))
+
+testf0__2 :: CRProxy (LessThanConstraint Zero)
+testf0__2 = invokeTest (BProxy :: BProxy False) testf0 (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint (NRational N2 P5))) (LessThanConstraint (PRational P2 P1))))
+
+resolveTest0 :: RatioI Zero
+resolveTest0 = resolve (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint Zero)) (LessThanOrEqualToConstraint Zero)))
+
+resolveTest1 :: RatioI (PRational P1 P5)
+resolveTest1 = resolve (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P5))) (LessThanOrEqualToConstraint (PRational P1 P5))))
+
+-- these all correctly fail
+-- resolveTest1 :: forall t4391. ResolvableRationalInternal (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P1))) (LessThanOrEqualToConstraint Zero)) t4391 => Rational t4391 => RatioI t4391
+-- resolveTest1 = resolve (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P1))) (LessThanOrEqualToConstraint Zero)))
+-- resolveTest2 = resolve (CRProxy :: CRProxy (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P1))) (LessThanOrEqualToConstraint Zero)))
+addLessThanZero =
+  addConstrainedRationals ::
+    ConstrainedRational (LessThanConstraint Zero) (LessThanConstraint Zero) =>
+    ConstrainedRatioI (LessThanConstraint Zero) ->
+    ( ConstrainedRational (LessThanConstraint Zero) (LessThanConstraint Zero) =>
+      ConstrainedRatioI (LessThanConstraint Zero) ->
+      ( forall (c :: ConstrainedRational).
+        AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c =>
+        ConstrainedRatioI c
+      )
+    )
+
+lt0 = ((CR (negate 51) 3) :: ConstrainedRational (LessThanConstraint Zero) (LessThanConstraint Zero) => ConstrainedRatioI (LessThanConstraint Zero))
+
+testAdd :: forall (c :: ConstrainedRational). AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c => ConstrainedRatioI c
+testAdd = addLessThanZero lt0 lt0
+
+-- this correctly fails
+-- testAddSpecializedFail = testAdd :: ConstrainedRatioI (LessThanConstraint (PRational P1 P1))
+testAddSpecialized = testAdd :: ConstrainedRatioI (LessThanConstraint Zero)
+
+testfneg :: ConstrainedRatioI (LessThanConstraint (NRational N3 P2)) -> ConstrainedRatioI (LessThanConstraint (NRational N4 P2))
+testfneg _ = (CR (negate 100) 2)
+
+testfpos :: ConstrainedRatioI (LessThanConstraint (PRational P3 P2)) -> ConstrainedRatioI (LessThanConstraint (PRational P3 P2))
+testfpos _ = (CR 5 2)
+
+-- fails as expected
+-- testInvoke = invoke testfneg testAdd
+testInvoke :: ConstrainedRatio (LessThanConstraint (PRational P3 P2)) Int Int
+testInvoke = invoke testfpos testAdd
+
 main :: Effect Unit
 main = do
-  void $ pure (inflectLessThan (RProxy :: RProxy (PRational P1 P1)) addRationals (toRational :: RatioI (PRational P1 P2)) (toRational :: RatioI (PRational P1 P1)))
+  void $ pure unit
