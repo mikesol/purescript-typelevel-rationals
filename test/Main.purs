@@ -1,12 +1,9 @@
 module Test.Main where
 
 import Prelude
-import Data.Array.NonEmpty (NonEmptyArray, head)
 import Data.Maybe (Maybe)
 import Effect (Effect)
-import Data.Ratio ((%))
 import Effect.Class.Console (log)
-import Data.Ratio as DR
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
 import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GreaterThan, class InvokableRational, class LessThan, AndConstraint, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, LessThanConstraint, LessThanOrEqualToConstraint, N2, N3, N4, NRational, NotConstraint, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), RatioI, Zero, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, kind ConstrainedRational)
