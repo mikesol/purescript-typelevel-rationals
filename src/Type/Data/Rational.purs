@@ -9,7 +9,7 @@ import Type.Data.Boolean (class And, class Not, class Or, BProxy)
 import Unsafe.Coerce (unsafeCoerce)
 
 ----- kinds
-foreign import kind InvokableRational
+foreign import kind ConstrainedRational
 
 foreign import kind Rational
 
@@ -39,22 +39,22 @@ infix 6 type PRational as /~
 infix 6 type NRational as //~
 
 ----- constrained rational constructors
-foreign import data LessThanConstraint :: Rational -> InvokableRational
+foreign import data LessThanConstraint :: Rational -> ConstrainedRational
 
-foreign import data LessThanOrEqualToConstraint :: Rational -> InvokableRational
+foreign import data LessThanOrEqualToConstraint :: Rational -> ConstrainedRational
 
-foreign import data NotConstraint :: InvokableRational -> InvokableRational
+foreign import data NotConstraint :: ConstrainedRational -> ConstrainedRational
 
-foreign import data AndConstraint :: InvokableRational -> InvokableRational -> InvokableRational
+foreign import data AndConstraint :: ConstrainedRational -> ConstrainedRational -> ConstrainedRational
 
-foreign import data OrConstraint :: InvokableRational -> InvokableRational -> InvokableRational
+foreign import data OrConstraint :: ConstrainedRational -> ConstrainedRational -> ConstrainedRational
 
 ----- proxy for a rational
-data CRProxy (r :: InvokableRational)
+data CRProxy (r :: ConstrainedRational)
   = CRProxy
 
 ----- representation of a rational with numbers
-data ConstrainedRatio (r :: InvokableRational) a b
+data ConstrainedRatio (r :: ConstrainedRational) a b
   = CR a b
 
 instance showConstrainedRatio :: (Show a, Show b) => Show (ConstrainedRatio r a b) where
@@ -67,16 +67,16 @@ type ConstrainedRatioI r
 maximallyUnsafe :: forall a b c d. (a -> c) -> b -> d
 maximallyUnsafe f x = unsafeCoerce $ f (unsafeCoerce x)
 
-class TestRational (a :: InvokableRational) (b :: InvokableRational) (bool :: Boolean) | a b -> bool where
+class TestRational (a :: ConstrainedRational) (b :: ConstrainedRational) (bool :: Boolean) | a b -> bool where
   invokeTest :: forall c. (BProxy bool) -> (CRProxy a -> c) -> CRProxy b -> c
 
 instance testRational :: InvokableRationalRep a b bool => TestRational a b bool where
   invokeTest _ = maximallyUnsafe
 
-class InvokableRational (a :: InvokableRational) (b :: InvokableRational) where
+class InvokableRational (a :: ConstrainedRational) (b :: ConstrainedRational) where
   invoke :: forall c. (ConstrainedRatioI a -> c) -> ConstrainedRatioI b -> c
 
-class ConstrainedRational (a :: InvokableRational) where
+class ConstrainedRational (a :: ConstrainedRational) where
   asConstraintedRational :: Int -> Int -> Maybe (ConstrainedRatioI a)
 
 instance asConstraintedRationalOr :: (ConstrainedRational a, ConstrainedRational b) => ConstrainedRational (OrConstraint a b) where
@@ -135,7 +135,7 @@ instance asConstraintedRationalLessThanTo :: Rational a => ConstrainedRational (
 instance constrainedRational :: InvokableRationalRep a b True => InvokableRational a b where
   invoke = maximallyUnsafe
 
-class InvokableRationalRep (a :: InvokableRational) (b :: InvokableRational) (c :: Boolean) | a b -> c
+class InvokableRationalRep (a :: ConstrainedRational) (b :: ConstrainedRational) (c :: Boolean) | a b -> c
 
 -- two less thans can be compared
 -- < 101 < 100
@@ -169,22 +169,22 @@ instance rationalLessThanLessThanOrEqualTo ::
 
 -- same as flipping operation
 instance rationalNotLessThan ::
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (LessThanOrEqualToConstraint b) c =>
+  InvokableRationalRep (LessThanOrEqualToConstraint b) (LessThanOrEqualToConstraint a) c =>
   InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanConstraint b)) c
 
 -- same as flipping operation
 instance rationalNotLessThanOrEqualTo ::
-  InvokableRationalRep (LessThanConstraint a) (LessThanConstraint b) c =>
+  InvokableRationalRep (LessThanConstraint b) (LessThanConstraint a) c =>
   InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
 
 -- same as flipping operation
 instance rationalNotLessThanOrEqualToLessThan ::
-  InvokableRationalRep (LessThanConstraint a) (LessThanOrEqualToConstraint b) c =>
+  InvokableRationalRep (LessThanOrEqualToConstraint b) (LessThanConstraint a) c =>
   InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanConstraint b)) c
 
 -- same as flipping operation
 instance rationalNotLessThanLessThanOrEqualTo ::
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (LessThanConstraint b) c =>
+  InvokableRationalRep (LessThanConstraint b) (LessThanOrEqualToConstraint a) c =>
   InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
 
 -- the nots
@@ -212,10 +212,51 @@ instance rationalNotFalse6 ::
 instance rationalNotFalse7 ::
   InvokableRationalRep (LessThanConstraint a) (NotConstraint (LessThanOrEqualToConstraint b)) False
 
+instance rationalNotLessThanRight0 ::
+  InvokableRationalRep x (LessThanConstraint a) b =>
+  InvokableRationalRep (NotConstraint (NotConstraint x)) (LessThanConstraint a) b
+
+instance rationalNotLessThanEqRight0 ::
+  InvokableRationalRep x (LessThanOrEqualToConstraint a) b =>
+  InvokableRationalRep (NotConstraint (NotConstraint x)) (LessThanOrEqualToConstraint a) b
+
+instance rationalNotLessNotNot ::
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) x b =>
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (NotConstraint x)) b
+
+instance rationalNotLessEqNotNot ::
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) x b =>
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (NotConstraint x)) b
+
+instance rationalNotLessNotAnd ::
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (AndConstraint x y)) b
+
+instance rationalNotLessEqNotAnd ::
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (AndConstraint x y)) b
+
+instance rationalNotLessNotOr ::
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
+  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (OrConstraint x y)) b
+
+instance rationalNotLessEqNotOr ::
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
+  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (OrConstraint x y)) b
+
+-- 
 -- not not
-instance rationalNotNotL ::
-  InvokableRationalRep a x c =>
-  InvokableRationalRep (NotConstraint (NotConstraint a)) x c
+instance rationalNotNotL0 ::
+  InvokableRationalRep a (NotConstraint x) c =>
+  InvokableRationalRep (NotConstraint (NotConstraint a)) (NotConstraint x) c
+
+instance rationalNotNotL1 ::
+  InvokableRationalRep a (AndConstraint x y) c =>
+  InvokableRationalRep (NotConstraint (NotConstraint a)) (AndConstraint x y) c
+
+instance rationalNotNotL2 ::
+  InvokableRationalRep a (OrConstraint x y) c =>
+  InvokableRationalRep (NotConstraint (NotConstraint a)) (OrConstraint x y) c
 
 instance rationalNotNotR0 ::
   InvokableRationalRep (LessThanConstraint x) a c =>
@@ -321,68 +362,62 @@ instance rationalAndL1 ::
   InvokableRationalRep (AndConstraint a b) (LessThanOrEqualToConstraint x) e
 
 instance rationalAndL3 ::
-  ( InvokableRationalRep a (AndConstraint x y) c
-  , InvokableRationalRep b (AndConstraint x y) d
-  , And c d e
+  ( InvokableRationalRep a x q
+  , InvokableRationalRep a y r
+  , InvokableRationalRep b x s
+  , InvokableRationalRep b y t
+  , Or q r f
+  , Or s t g
+  , And f g e
   ) =>
   InvokableRationalRep (AndConstraint a b) (AndConstraint x y) e
 
 instance rationalAndL4 ::
-  ( InvokableRationalRep a (OrConstraint x y) c
-  , InvokableRationalRep b (OrConstraint x y) d
+  ( InvokableRationalRep a x q
+  , InvokableRationalRep a y r
+  , InvokableRationalRep b x s
+  , InvokableRationalRep b y t
+  , And q r f
+  , And s t g
   , And c d e
   ) =>
   InvokableRationalRep (AndConstraint a b) (OrConstraint x y) e
 
 instance rationalAndR0 ::
-  ( AsLessThanConstraint
-      (AndConstraint a b)
-      c
-      True
-  , InvokableRationalRep (LessThanConstraint x) c f
+  ( InvokableRationalRep (LessThanConstraint x) a q
+  , InvokableRationalRep (LessThanConstraint x) b r
+  , Or q r s
   ) =>
-  InvokableRationalRep (LessThanConstraint x) (AndConstraint a b) f
-
-instance rationalAndnR0 ::
-  ( AsNotLessThanConstraint
-      (AndConstraint a b)
-      c
-      q
-  , AsNotLessThanOrEqualToConstraint
-      (AndConstraint a b)
-      d
-      r
-  , NotLessThanSemigroup q r c d e
-  , InvokableRationalRep (NotConstraint (LessThanConstraint x)) e f
-  ) =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint x)) (AndConstraint a b) f
+  InvokableRationalRep (LessThanConstraint x) (AndConstraint a b) s
 
 instance rationalAndR1 ::
-  ( AsLessThanConstraint
-      (AndConstraint a b)
-      c
-      q
-  , AsLessThanOrEqualToConstraint
-      (AndConstraint a b)
-      d
-      r
-  , LessThanSemigroup q r c d e
-  , InvokableRationalRep (LessThanOrEqualToConstraint x) e f
+  ( InvokableRationalRep (LessThanOrEqualToConstraint x) a q
+  , InvokableRationalRep (LessThanOrEqualToConstraint x) b r
+  , Or q r s
   ) =>
   InvokableRationalRep (LessThanOrEqualToConstraint x) (AndConstraint a b) f
 
-instance rationalAndnR1 ::
-  ( AsNotLessThanOrEqualToConstraint
-      (AndConstraint a b)
-      d
-      True
-  , InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) d f
+instance rationalAndRl ::
+  ( InvokableRationalRep (NotConstraint (LessThanConstraint x)) a q
+  , InvokableRationalRep (NotConstraint (LessThanConstraint x)) b r
+  , Or q r s
+  ) =>
+  InvokableRationalRep (NotConstraint (LessThanConstraint x)) (AndConstraint a b) f
+
+instance rationalAndRle ::
+  ( InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) a q
+  , InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) b r
+  , Or q r s
   ) =>
   InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) (AndConstraint a b) f
 
 instance rationalAndR4 ::
-  ( InvokableRationalRep x (AndConstraint a b) c
-  , InvokableRationalRep y (AndConstraint a b) d
+  ( InvokableRationalRep a x q
+  , InvokableRationalRep a y r
+  , InvokableRationalRep b x s
+  , InvokableRationalRep b y t
+  , Or q r f
+  , Or s t g
   , Or c d e
   ) =>
   InvokableRationalRep (OrConstraint x y) (AndConstraint a b) e
@@ -403,93 +438,31 @@ instance rationalOrL1 ::
   InvokableRationalRep (OrConstraint a b) (LessThanOrEqualToConstraint x) e
 
 instance rationalOrL4 ::
-  ( InvokableRationalRep a (OrConstraint x y) c
-  , InvokableRationalRep b (OrConstraint x y) d
+  ( InvokableRationalRep a x q
+  , InvokableRationalRep a y r
+  , InvokableRationalRep b x s
+  , InvokableRationalRep b y t
+  , And q r f
+  , And s t g
   , Or c d e
   ) =>
   InvokableRationalRep (OrConstraint a b) (OrConstraint x y) e
 
 instance rationalOrR0 ::
-  ( AsLessThanConstraint
-      (OrConstraint a b)
-      c
-      True
-  , InvokableRationalRep (LessThanConstraint x) c f
+  ( InvokableRationalRep (LessThanConstraint x) a q
+  , InvokableRationalRep (LessThanConstraint x) b r
+  , And q r s
   ) =>
-  InvokableRationalRep (LessThanConstraint x) (OrConstraint a b) f
-
-instance rationalOrnR0 ::
-  ( AsNotLessThanConstraint
-      (OrConstraint a b)
-      c
-      q
-  , AsNotLessThanOrEqualToConstraint
-      (OrConstraint a b)
-      d
-      r
-  , NotLessThanSemigroup q r c d e
-  , InvokableRationalRep (NotConstraint (LessThanConstraint x)) e f
-  ) =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint x)) (OrConstraint a b) f
+  InvokableRationalRep (LessThanConstraint x) (OrConstraint a b) s
 
 instance rationalOrR1 ::
-  ( AsLessThanConstraint
-      (OrConstraint a b)
-      c
-      q
-  , AsLessThanOrEqualToConstraint
-      (OrConstraint a b)
-      d
-      r
-  , LessThanSemigroup q r c d e
-  , InvokableRationalRep (LessThanOrEqualToConstraint x) e f
+  ( InvokableRationalRep (LessThanOrEqualToConstraint x) a q
+  , InvokableRationalRep (LessThanOrEqualToConstraint x) b r
+  , And q r s
   ) =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (OrConstraint a b) f
+  InvokableRationalRep (LessThanOrEqualToConstraint x) (OrConstraint a b) s
 
-instance rationalOrnR1 ::
-  ( AsNotLessThanOrEqualToConstraint
-      (OrConstraint a b)
-      d
-      True
-  , InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) d f
-  ) =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) (OrConstraint a b) f
-
-class AsLessThanConstraint (a :: InvokableRational) (b :: InvokableRational) (c :: Boolean) | a -> b c
-
-instance asLessThanConstraintLessThanConstraint :: AsLessThanConstraint (LessThanConstraint a) (LessThanConstraint a) True
-
-instance asLessThanConstraintLessThanOrEqualToConstraint :: AsLessThanConstraint (LessThanOrEqualToConstraint a) (LessThanOrEqualToConstraint a) False
-
-instance asLessThanConstraintNotConstraint ::
-  AsNotLessThanConstraint a (NotConstraint b) v =>
-  AsLessThanConstraint
-    (NotConstraint a)
-    b
-    v
-
-instance asLessThanConstraintAndConstraint ::
-  ( AsLessThanConstraint a m q
-  , AsLessThanConstraint b n r
-  , Or q r True
-  , Gate q m n (LessThanConstraint xx) -- monoid
-  , Gate r n m (LessThanConstraint yy)
-  , LessThan xx yy switch
-  , Gate switch (LessThanConstraint xx) (LessThanConstraint yy) c
-  ) =>
-  AsLessThanConstraint (AndConstraint a b) c True
-
-instance asLessThanConstraintOrConstraint ::
-  ( AsLessThanConstraint a (LessThanConstraint x) q
-  , AsLessThanConstraint b (LessThanConstraint y) r
-  , And q r True
-  , GreaterThan x y switch
-  , Gate switch (LessThanConstraint x) (LessThanConstraint y) c
-  , AsLessThanConstraint (LessThanConstraint x) c True
-  ) =>
-  AsLessThanConstraint (OrConstraint a b) c True
-
-class Gate (a :: Boolean) (b :: InvokableRational) (c :: InvokableRational) (d :: InvokableRational) | a b c -> d
+class Gate (a :: Boolean) (b :: ConstrainedRational) (c :: ConstrainedRational) (d :: ConstrainedRational) | a b c -> d
 
 instance gateTrue :: Gate True b c b
 
@@ -501,131 +474,18 @@ instance gateRTrue :: GateR True b c b
 
 instance gateRFalse :: GateR False b c c
 
-class AsLessThanOrEqualToConstraint (a :: InvokableRational) (b :: InvokableRational) (c :: Boolean) | a -> b c
-
-instance asLessThanOrEqualToConstraintLessThanConstraint :: AsLessThanOrEqualToConstraint (LessThanConstraint a) (LessThanConstraint a) False
-
-instance asLessThanOrEqualToConstraintLessThanOrEqualToConstraint :: AsLessThanOrEqualToConstraint (LessThanOrEqualToConstraint a) (LessThanOrEqualToConstraint a) True
-
-instance asLessThanOrEqualToConstraintNotConstraint ::
-  AsNotLessThanOrEqualToConstraint a (NotConstraint b) v =>
-  AsLessThanOrEqualToConstraint
-    (NotConstraint a)
-    b
-    v
-
-instance asLessThanOrEqualToConstraintAndConstraint ::
-  ( AsLessThanOrEqualToConstraint a m q
-  , AsLessThanOrEqualToConstraint b n r
-  , Or q r True
-  , Gate q m n (LessThanConstraint xx) -- monoid
-  , Gate r n m (LessThanConstraint yy)
-  , LessThanOrEqualTo xx yy switch
-  , Gate switch (LessThanOrEqualToConstraint xx) (LessThanOrEqualToConstraint yy) c
-  ) =>
-  AsLessThanOrEqualToConstraint (AndConstraint a b) c True
-
-instance asLessThanOrEqualToConstraintOrConstraint ::
-  ( AsLessThanOrEqualToConstraint a (LessThanOrEqualToConstraint x) q
-  , AsLessThanOrEqualToConstraint b (LessThanOrEqualToConstraint y) r
-  , And q r True
-  , GreaterThanOrEqualTo x y switch
-  , Gate switch (LessThanOrEqualToConstraint x) (LessThanOrEqualToConstraint y) c
-  ) =>
-  AsLessThanOrEqualToConstraint (OrConstraint a b) c True
-
-class AsNotLessThanConstraint (a :: InvokableRational) (b :: InvokableRational) (c :: Boolean) | a -> b c
-
-instance asNotLessThanConstraintLessThanConstraint :: AsNotLessThanConstraint (LessThanConstraint a) b False
-
-instance asNotLessThanConstraintLessThanOrEqualToConstraint :: AsNotLessThanConstraint (LessThanOrEqualToConstraint a) b False
-
-instance asNotLessThanConstraintNotConstraint ::
-  AsLessThanConstraint a b v =>
-  AsNotLessThanConstraint
-    (NotConstraint a)
-    (NotConstraint b)
-    v
-
-instance asNotLessThanConstraintAndConstraint ::
-  ( AsNotLessThanConstraint a m q
-  , AsNotLessThanConstraint b n r
-  , Or q r True
-  , Gate q m n (LessThanConstraint xx) -- monoid
-  , Gate r n m (LessThanConstraint yy)
-  , GreaterThanOrEqualTo xx yy switch
-  , Gate switch (NotConstraint (LessThanConstraint xx)) (NotConstraint (LessThanConstraint yy)) c
-  ) =>
-  AsNotLessThanConstraint (AndConstraint a b) c True
-
-instance asNotLessThanConstraintOrConstraint ::
-  ( AsNotLessThanConstraint a (NotConstraint (LessThanConstraint x)) q
-  , AsNotLessThanConstraint b (NotConstraint (LessThanConstraint y)) r
-  , And q r True
-  , LessThanOrEqualTo x y switch
-  , Gate switch (NotConstraint (LessThanConstraint x)) (NotConstraint (LessThanConstraint y)) c
-  ) =>
-  AsNotLessThanConstraint (OrConstraint a b) c True
-
-class AsNotLessThanOrEqualToConstraint (a :: InvokableRational) (b :: InvokableRational) (c :: Boolean) | a -> b c
-
-instance asNotLessThanOrEqualToConstraintLessThanConstraint :: AsNotLessThanOrEqualToConstraint (LessThanConstraint a) b False
-
-instance asNotLessThanOrEqualToConstraintLessThanOrEqualToConstraint :: AsNotLessThanOrEqualToConstraint (LessThanOrEqualToConstraint a) b False
-
-instance asNotLessThanOrEqualToConstraintNotConstraint ::
-  AsNotLessThanOrEqualToConstraint a b v =>
-  AsNotLessThanOrEqualToConstraint
-    (NotConstraint a)
-    (NotConstraint b)
-    v
-
-instance asNotLessThanOrEqualToConstraintAndConstraint ::
-  ( AsNotLessThanOrEqualToConstraint a m q
-  , AsNotLessThanOrEqualToConstraint b n r
-  , Or q r True
-  , Gate q m n (LessThanConstraint xx) -- monoid
-  , Gate r n m (LessThanConstraint yy)
-  , GreaterThan xx yy switch
-  , Gate switch (NotConstraint (LessThanOrEqualToConstraint xx)) (NotConstraint (LessThanOrEqualToConstraint yy)) c
-  ) =>
-  AsNotLessThanOrEqualToConstraint (AndConstraint a b) c True
-
-instance asNotLessThanOrEqualToConstraintOrConstraint ::
-  ( AsNotLessThanOrEqualToConstraint a (NotConstraint (LessThanOrEqualToConstraint x)) q
-  , AsNotLessThanOrEqualToConstraint b (NotConstraint (LessThanOrEqualToConstraint y)) r
-  , And q r True
-  , LessThan x y switch
-  , Gate switch (NotConstraint (LessThanOrEqualToConstraint x)) (NotConstraint (LessThanOrEqualToConstraint y)) c
-  ) =>
-  AsNotLessThanOrEqualToConstraint (OrConstraint a b) c True
-
-----------------------------
-class LessThanSemigroup (x :: Boolean) (y :: Boolean) (a :: InvokableRational) (b :: InvokableRational) (c :: InvokableRational) | x y -> a b c
-
-instance lessThanSemigroupTT :: LessThanSemigroup True True a b a
-
-instance lessThanSemigroupTF :: LessThanSemigroup True False a b a
-
-instance lessThanSemigroupFT :: LessThanSemigroup False True a b b
-
-class NotLessThanSemigroup (x :: Boolean) (y :: Boolean) (a :: InvokableRational) (b :: InvokableRational) (c :: InvokableRational) | x y -> a b c
-
-instance notLessThanSemigroupTT :: NotLessThanSemigroup True True a b a
-
-instance notLessThanSemigroupTF :: NotLessThanSemigroup True False a b a
-
-instance notLessThanSemigroupFT :: NotLessThanSemigroup False True a b b
-
 ----------------------------
 -- a rational where only one value is inhabited
-class ResolvableRational (a :: InvokableRational) (b :: Rational) | a -> b where
+class ResolvableRational (a :: ConstrainedRational) (b :: Rational) | a -> b where
   resolve :: CRProxy a -> RatioI b
+
+constConstrained :: forall (a :: Rational). RatioI a -> ConstrainedRatioI (AndConstraint (NotConstraint (LessThanConstraint a)) (LessThanOrEqualToConstraint a))
+constConstrained (R x y) = (CR x y)
 
 instance resolvableRational :: (PushNotsDown a aa, AreOrsToTop aa b, GatedLiftOrs b aa aaa, MergeAnds aaa aaaa, ResolvableRationalInternal aaaa res True, Rational res) => ResolvableRational a res where
   resolve _ = (toRational :: RatioI res)
 
-class ResolvableRationalInternal (a :: InvokableRational) (b :: Rational) (bool :: Boolean) | a -> b bool
+class ResolvableRationalInternal (a :: ConstrainedRational) (b :: Rational) (bool :: Boolean) | a -> b bool
 
 instance resolvableRationalLessThan :: ResolvableRationalInternal (LessThanConstraint n) Zero False
 
@@ -657,13 +517,13 @@ instance resolvableRationalInternalOr :: (ResolvableRationalInternal a m True, R
 ---- adds two rationals
 ---- uses rank-n types so that qualification can be partially applied
 addConstrainedRationals ::
-  forall (a :: InvokableRational) (x :: InvokableRational).
+  forall (a :: ConstrainedRational) (x :: ConstrainedRational).
   InvokableRational a x =>
   ConstrainedRatioI a ->
-  ( forall (b :: InvokableRational) (y :: InvokableRational).
+  ( forall (b :: ConstrainedRational) (y :: ConstrainedRational).
     InvokableRational b y =>
     ConstrainedRatioI b ->
-    ( forall (c :: InvokableRational).
+    ( forall (c :: ConstrainedRational).
       AddConstraint x y c =>
       ConstrainedRatioI c
     )
@@ -913,16 +773,16 @@ instance mulNN :: (NMul n0 n1 n2, PMul d0 d1 d2) => Mul (NRational n0 d0) (NRati
 
 instance mulPP :: (PMul n0 n1 n2, PMul d0 d1 d2) => Mul (PRational n0 d0) (PRational n1 d1) (PRational n2 d2)
 
-class PrepForAdding (a :: InvokableRational) (b :: InvokableRational) | a -> b
+class PrepForAdding (a :: ConstrainedRational) (b :: ConstrainedRational) | a -> b
 
 instance prepForAdding :: (PushNotsDown a aa, AreOrsToTop aa b, GatedLiftOrs b aa aaa, MergeAnds aaa res) => PrepForAdding a res
 
-class AddConstraint (a :: InvokableRational) (b :: InvokableRational) (c :: InvokableRational) | a b -> c
+class AddConstraint (a :: ConstrainedRational) (b :: ConstrainedRational) (c :: ConstrainedRational) | a b -> c
 
 instance addConstraint :: (PrepForAdding a aa, PrepForAdding b bb, AddConstrainedValues aa bb res) => AddConstraint a b res
 
 ----- add two rationals
-class AddConstrainedValues (a :: InvokableRational) (b :: InvokableRational) (c :: InvokableRational) | a b -> c
+class AddConstrainedValues (a :: ConstrainedRational) (b :: ConstrainedRational) (c :: ConstrainedRational) | a b -> c
 
 instance addConstrainedValuesLessThanConstraintLessThanConstraint :: Add a x c => AddConstrainedValues (LessThanConstraint a) (LessThanConstraint x) (LessThanConstraint c)
 
@@ -1042,7 +902,7 @@ instance addConstrainedValuesOrConstraintAndConstraint :: (AddConstrainedValues 
 
 instance addConstrainedValuesOrConstraintOrConstraint :: (AddConstrainedValues a x m, AddConstrainedValues a y n, AddConstrainedValues b x o, AddConstrainedValues b y p) => AddConstrainedValues (OrConstraint a b) (OrConstraint x y) (OrConstraint (OrConstraint m n) (OrConstraint o p))
 
-class AreOrsToTop (a :: InvokableRational) (b :: Boolean) | a -> b
+class AreOrsToTop (a :: ConstrainedRational) (b :: Boolean) | a -> b
 
 -- will only execute at the toplevel
 instance areOrsToTopOr :: (AreOrsToTop a x, AreOrsToTop b y, And x y z) => AreOrsToTop (OrConstraint a b) z
@@ -1115,14 +975,14 @@ instance areOrsToTopAndOrConstraintAndConstraint :: AreOrsToTop (AndConstraint (
 
 instance areOrsToTopAndOrConstraintOrConstraint :: AreOrsToTop (AndConstraint (OrConstraint a b) (OrConstraint x y)) False
 
-class GatedLiftOrs (gate :: Boolean) (maybeLift :: InvokableRational) (res :: InvokableRational) | gate maybeLift -> res
+class GatedLiftOrs (gate :: Boolean) (maybeLift :: ConstrainedRational) (res :: ConstrainedRational) | gate maybeLift -> res
 
 instance gatedLiftOrsTrue :: GatedLiftOrs True x x
 
 instance gatedLiftOrsFalse :: (LiftOrs x y, AreOrsToTop y b, GatedLiftOrs b y z) => GatedLiftOrs False x z
 
 -- lift ors
-class LiftOrs (a :: InvokableRational) (b :: InvokableRational) | a -> b
+class LiftOrs (a :: ConstrainedRational) (b :: ConstrainedRational) | a -> b
 
 -- will only execute at the toplevel
 instance liftOrsOr :: (LiftOrs a x, LiftOrs b y) => LiftOrs (OrConstraint a b) (OrConstraint x y)
@@ -1196,7 +1056,7 @@ instance liftOrsAndOrConstraintAndConstraint :: (LiftOrs a m, LiftOrs b n, LiftO
 instance liftOrsAndOrConstraintOrConstraint :: (LiftOrs a m, LiftOrs b n, LiftOrs x o, LiftOrs y p) => LiftOrs (AndConstraint (OrConstraint x y) (OrConstraint a b)) (OrConstraint (OrConstraint (AndConstraint o m) (AndConstraint o n)) (OrConstraint (AndConstraint p m) (AndConstraint p n)))
 
 -- push nots
-class PushNotsDown (a :: InvokableRational) (b :: InvokableRational) | a -> b
+class PushNotsDown (a :: ConstrainedRational) (b :: ConstrainedRational) | a -> b
 
 instance pushNotsDownLessThanConstraint :: PushNotsDown (LessThanConstraint x) (LessThanConstraint x)
 
@@ -1216,7 +1076,7 @@ instance pushNotsDownAnd :: (PushNotsDown a x, PushNotsDown b y) => PushNotsDown
 
 instance pushNotsDownOr :: (PushNotsDown a x, PushNotsDown b y) => PushNotsDown (OrConstraint a b) (OrConstraint x y)
 
-class MergeAnds (a :: InvokableRational) (b :: InvokableRational) | a -> b
+class MergeAnds (a :: ConstrainedRational) (b :: ConstrainedRational) | a -> b
 
 instance mergeAndsLessThan :: MergeAnds (LessThanConstraint x) (LessThanConstraint x)
 

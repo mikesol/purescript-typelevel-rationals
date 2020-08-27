@@ -6,7 +6,7 @@ import Effect (Effect)
 import Effect.Class.Console (log)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GreaterThan, class InvokableRational, class LessThan, AndConstraint, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, LessThanConstraint, LessThanOrEqualToConstraint, N2, N3, N4, NRational, NotConstraint, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), RatioI, Zero, addConstrainedRationals, asConstraintedRational, invoke, invokeTest, resolve, kind InvokableRational)
+import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GreaterThan, class InvokableRational, class LessThan, AndConstraint, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, LessThanConstraint, LessThanOrEqualToConstraint, N2, N3, N4, NRational, NotConstraint, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), RatioI, Zero, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, kind ConstrainedRational)
 
 test0 :: BProxy True
 test0 = BProxy :: ∀ b. LessThan (PRational P1 P1) (PRational P2 P1) b => BProxy b
@@ -66,7 +66,7 @@ addLessThanZero =
     ConstrainedRatioI (LessThanConstraint Zero) ->
     ( InvokableRational (LessThanConstraint Zero) (LessThanConstraint Zero) =>
       ConstrainedRatioI (LessThanConstraint Zero) ->
-      ( forall (c :: InvokableRational).
+      ( forall (c :: ConstrainedRational).
         AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c =>
         ConstrainedRatioI c
       )
@@ -74,7 +74,7 @@ addLessThanZero =
 
 lt0 = ((CR (negate 51) 3) :: InvokableRational (LessThanConstraint Zero) (LessThanConstraint Zero) => ConstrainedRatioI (LessThanConstraint Zero))
 
-testAdd :: forall (c :: InvokableRational). AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c => ConstrainedRatioI c
+testAdd :: forall (c :: ConstrainedRational). AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c => ConstrainedRatioI c
 testAdd = addLessThanZero lt0 lt0
 
 -- this correctly fails
@@ -92,9 +92,83 @@ testfpos _ = (CR 5 2)
 testInvoke :: ConstrainedRatio (LessThanConstraint (PRational P3 P2)) Int Int
 testInvoke = invoke testfpos testAdd
 
+----- for the blog article
+oneHalfPrecise =
+  asConstraintedRational 1 2 ::
+    Maybe
+      ( ConstrainedRatioI
+          ( AndConstraint
+              ( NotConstraint
+                  (LessThanConstraint (PRational P1 P2))
+              )
+              (LessThanConstraint (PRational P1 P2))
+          )
+      )
+
+returnAQuarter ::
+  ConstrainedRatioI
+    ( AndConstraint
+        ( NotConstraint
+            (LessThanConstraint Zero)
+        )
+        (LessThanConstraint (PRational P1 P1))
+    ) ->
+  ConstrainedRatioI
+    ( AndConstraint
+        ( NotConstraint
+            (LessThanConstraint (PRational P1 P4))
+        )
+        (LessThanOrEqualToConstraint (PRational P1 P4))
+    )
+returnAQuarter _ =
+  constConstrained
+    ( resolve
+        ( CRProxy ::
+            CRProxy
+              ( AndConstraint
+                  ( NotConstraint
+                      (LessThanConstraint (PRational P1 P4))
+                  )
+                  (LessThanOrEqualToConstraint (PRational P1 P4))
+              )
+        )
+    )
+
+myQuarterBack ::
+  ConstrainedRatioI
+    ( AndConstraint
+        ( NotConstraint
+            (LessThanConstraint (PRational P1 P4))
+        )
+        (LessThanOrEqualToConstraint (PRational P1 P4))
+    )
+myQuarterBack =
+  invoke returnAQuarter
+    ( (CR 1 2) ::
+        ConstrainedRatioI
+          ( AndConstraint
+              ( NotConstraint
+                  (LessThanConstraint (PRational P1 P2))
+              )
+              (LessThanConstraint (PRational P1 P2))
+          )
+    )
+
 main :: Effect Unit
 main = do
   log (show ((asConstraintedRational 3 2 :: Maybe (ConstrainedRatioI (LessThanOrEqualToConstraint (PRational P3 P2))))))
   log (show ((asConstraintedRational 1 2 :: Maybe (ConstrainedRatioI (LessThanOrEqualToConstraint (PRational P3 P2))))))
   log (show ((asConstraintedRational 5 2 :: Maybe (ConstrainedRatioI (LessThanOrEqualToConstraint (PRational P3 P2))))))
+  let
+    oneHalf =
+      asConstraintedRational 1 2 ::
+        Maybe
+          ( ConstrainedRatioI
+              ( AndConstraint
+                  ( NotConstraint
+                      (LessThanConstraint Zero)
+                  )
+                  (LessThanConstraint (PRational P1 P1))
+              )
+          )
   void $ pure unit
