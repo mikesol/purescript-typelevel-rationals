@@ -1,9 +1,12 @@
 module Test.Main where
 
 import Prelude
+import Data.Array.NonEmpty (NonEmptyArray, head)
 import Data.Maybe (Maybe)
 import Effect (Effect)
+import Data.Ratio ((%))
 import Effect.Class.Console (log)
+import Data.Ratio as DR
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
 import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GreaterThan, class InvokableRational, class LessThan, AndConstraint, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, LessThanConstraint, LessThanOrEqualToConstraint, N2, N3, N4, NRational, NotConstraint, P1, P10, P2, P3, P4, P5, P9, PRational, RProxy(..), RatioI, Zero, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, kind ConstrainedRational)
@@ -173,3 +176,46 @@ main = do
               )
           )
   void $ pure unit
+
+----------------------- further testing add function for those interested
+addLessThanZero' =
+  addConstrainedRationals ::
+    forall (a :: ConstrainedRational).
+    InvokableRational (LessThanConstraint Zero) a =>
+    ConstrainedRatioI (LessThanConstraint Zero) ->
+    ( forall (b :: ConstrainedRational).
+      InvokableRational (LessThanConstraint Zero) b =>
+      ConstrainedRatioI (LessThanConstraint Zero) ->
+      ( forall (c :: ConstrainedRational).
+        AddConstraint a b c =>
+        ConstrainedRatioI c
+      )
+    )
+
+step0 ::
+  ConstrainedRatioI (LessThanConstraint Zero) ->
+  ( forall (c :: ConstrainedRational).
+    AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c =>
+    ConstrainedRatioI c
+  )
+step0 = invoke addLessThanZero' lt0'
+
+lt0' = ((CR (negate 51) 3) :: ConstrainedRatioI (LessThanConstraint Zero))
+
+testAdd' :: forall (c :: ConstrainedRational). AddConstraint (LessThanConstraint Zero) (LessThanConstraint Zero) c => ConstrainedRatioI c
+testAdd' = invoke step0 lt0'
+
+-- this correctly fails
+-- testAddSpecializedFail = testAdd :: ConstrainedRatioI (LessThanConstraint (PRational P1 P1))
+testAddSpecialized' = testAdd' :: ConstrainedRatioI (LessThanConstraint Zero)
+
+testfneg' :: ConstrainedRatioI (LessThanConstraint (NRational N3 P2)) -> ConstrainedRatioI (LessThanConstraint (NRational N4 P2))
+testfneg' _ = (CR (negate 100) 2)
+
+testfpos' :: ConstrainedRatioI (LessThanConstraint (PRational P3 P2)) -> ConstrainedRatioI (LessThanConstraint (PRational P3 P2))
+testfpos' _ = (CR 5 2)
+
+-- fails as expected
+--testInvoke'' = invoke testfneg' testAdd'
+testInvoke' :: ConstrainedRatio (LessThanConstraint (PRational P3 P2)) Int Int
+testInvoke' = invoke testfpos' testAdd'
