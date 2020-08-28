@@ -149,12 +149,6 @@ threeHalvesPrecise =
       )
 
 -- myQuarterBackRed = invoke returnAQuarter <$> threeHalvesPrecise
-type Gte0lt1
-  = (AndConstraint (NotConstraint (LessThanConstraint Zero)) (LessThanConstraint (PRational P1 P1)))
-
-type IsOneHalf
-  = (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P2))) (LessThanConstraint (PRational P1 P2)))
-
 main :: Effect Unit
 main = do
   log (show ((asConstraintedRational 3 2 :: Maybe (ConstrainedRatioI (LessThanOrEqualToConstraint (PRational P3 P2))))))
@@ -216,3 +210,65 @@ testfpos' _ = (CR 5 2)
 --testInvoke'' = invoke testfneg' testAdd'
 testInvoke' :: ConstrainedRatio (LessThanConstraint (PRational P3 P2)) Int Int
 testInvoke' = invoke testfpos' testAdd'
+
+type Gte0lt1
+  = (AndConstraint (NotConstraint (LessThanConstraint Zero)) (LessThanConstraint (PRational P1 P1)))
+
+type IsOneHalf
+  = (AndConstraint (NotConstraint (LessThanConstraint (PRational P1 P2))) (LessThanConstraint (PRational P1 P2)))
+
+type IsOne
+  = (AndConstraint (NotConstraint (LessThanConstraint (PRational P4 P4))) (LessThanConstraint (PRational P4 P4)))
+
+type Between0And1
+  = ConstrainedRatioI
+      ( AndConstraint
+          ( NotConstraint
+              (LessThanConstraint Zero)
+          )
+          (LessThanConstraint (PRational P1 P1))
+      )
+
+firstStep =
+  addConstrainedRationals ::
+    forall (a :: ConstrainedRational).
+    InvokableRational
+      Gte0lt1
+      a =>
+    Between0And1 ->
+    ( forall (b :: ConstrainedRational).
+      InvokableRational
+        Gte0lt1
+        b =>
+      Between0And1 ->
+      ( forall (c :: ConstrainedRational).
+        AddConstraint a b c =>
+        ConstrainedRatioI c
+      )
+    )
+
+addTwoHalves ::
+  ConstrainedRatioI IsOneHalf ->
+  ConstrainedRatioI IsOneHalf ->
+  ConstrainedRatioI IsOne
+addTwoHalves i0 i1 = finalStep
+  where
+  curryFirstArg ::
+    Between0And1 ->
+    ( forall (c :: ConstrainedRational).
+      AddConstraint
+        IsOneHalf
+        IsOneHalf
+        c =>
+      (ConstrainedRatioI c)
+    )
+  curryFirstArg = invoke firstStep i0
+
+  finalStep ::
+    forall (c :: ConstrainedRational).
+    AddConstraint
+      IsOneHalf
+      IsOneHalf
+      c =>
+    ConstrainedRatioI c
+  finalStep = invoke curryFirstArg i1

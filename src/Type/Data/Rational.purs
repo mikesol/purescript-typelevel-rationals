@@ -70,7 +70,7 @@ maximallyUnsafe f x = unsafeCoerce $ f (unsafeCoerce x)
 class TestRational (a :: ConstrainedRational) (b :: ConstrainedRational) (bool :: Boolean) | a b -> bool where
   invokeTest :: forall c. (BProxy bool) -> (CRProxy a -> c) -> CRProxy b -> c
 
-instance testRational :: InvokableRationalRep a b bool => TestRational a b bool where
+instance testRational :: IsSuperset a b bool => TestRational a b bool where
   invokeTest _ = maximallyUnsafe
 
 class InvokableRational (a :: ConstrainedRational) (b :: ConstrainedRational) where
@@ -132,335 +132,335 @@ instance asConstraintedRationalLessThanTo :: Rational a => ConstrainedRational (
     ) ::
       Maybe (ConstrainedRatioI (LessThanConstraint a))
 
-instance constrainedRational :: InvokableRationalRep a b True => InvokableRational a b where
+instance constrainedRational :: IsSuperset a b True => InvokableRational a b where
   invoke = maximallyUnsafe
 
-class InvokableRationalRep (a :: ConstrainedRational) (b :: ConstrainedRational) (c :: Boolean) | a b -> c
+class IsSuperset (a :: ConstrainedRational) (b :: ConstrainedRational) (c :: Boolean) | a b -> c
 
 -- two less thans can be compared
 -- < 101 < 100
 -- < 100 < 100
 -- NOT < 99 < 100
-instance rationalLessThan ::
+instance isSupersetLessThan ::
   LessThanOrEqualTo b a c =>
-  InvokableRationalRep (LessThanConstraint a) (LessThanConstraint b) c
+  IsSuperset (LessThanConstraint a) (LessThanConstraint b) c
 
 -- two less than or equal tos can be compared
 -- <= 101 <= 100
 -- <= 100 <= 100
 -- NOT <= 99 <= 100
-instance rationalLessThanOrEqualTo ::
+instance isSupersetLessThanOrEqualTo ::
   LessThanOrEqualTo b a c =>
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (LessThanOrEqualToConstraint b) c
+  IsSuperset (LessThanOrEqualToConstraint a) (LessThanOrEqualToConstraint b) c
 
 -- <= 101 < 100
 -- <= 100 < 100
 -- NOT <= 99 < 100
-instance rationalLessThanOrEqualToLessThan ::
+instance isSupersetLessThanOrEqualToLessThan ::
   LessThanOrEqualTo b a c =>
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (LessThanConstraint b) c
+  IsSuperset (LessThanOrEqualToConstraint a) (LessThanConstraint b) c
 
 -- < 101 <= 100
 -- NOT < 100 <= 100
 -- NOT < 99 <= 100
-instance rationalLessThanLessThanOrEqualTo ::
+instance isSupersetLessThanLessThanOrEqualTo ::
   LessThan b a c =>
-  InvokableRationalRep (LessThanConstraint a) (LessThanOrEqualToConstraint b) c
+  IsSuperset (LessThanConstraint a) (LessThanOrEqualToConstraint b) c
 
 -- same as flipping operation
-instance rationalNotLessThan ::
-  InvokableRationalRep (LessThanOrEqualToConstraint b) (LessThanOrEqualToConstraint a) c =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanConstraint b)) c
+instance isSupersetNotLessThan ::
+  IsSuperset (LessThanOrEqualToConstraint b) (LessThanOrEqualToConstraint a) c =>
+  IsSuperset (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanConstraint b)) c
 
 -- same as flipping operation
-instance rationalNotLessThanOrEqualTo ::
-  InvokableRationalRep (LessThanConstraint b) (LessThanConstraint a) c =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
+instance isSupersetNotLessThanOrEqualTo ::
+  IsSuperset (LessThanConstraint b) (LessThanConstraint a) c =>
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
 
 -- same as flipping operation
-instance rationalNotLessThanOrEqualToLessThan ::
-  InvokableRationalRep (LessThanOrEqualToConstraint b) (LessThanConstraint a) c =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanConstraint b)) c
+instance isSupersetNotLessThanOrEqualToLessThan ::
+  IsSuperset (LessThanOrEqualToConstraint b) (LessThanConstraint a) c =>
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (LessThanConstraint b)) c
 
 -- same as flipping operation
-instance rationalNotLessThanLessThanOrEqualTo ::
-  InvokableRationalRep (LessThanConstraint b) (LessThanOrEqualToConstraint a) c =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
+instance isSupersetNotLessThanLessThanOrEqualTo ::
+  IsSuperset (LessThanConstraint b) (LessThanOrEqualToConstraint a) c =>
+  IsSuperset (NotConstraint (LessThanConstraint a)) (NotConstraint (LessThanOrEqualToConstraint b)) c
 
 -- the nots
-instance rationalNotFalse0 ::
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (LessThanConstraint b) False
+instance isSupersetNotFalse0 ::
+  IsSuperset (NotConstraint (LessThanConstraint a)) (LessThanConstraint b) False
 
-instance rationalNotFalse1 ::
-  InvokableRationalRep (LessThanConstraint a) (NotConstraint (LessThanConstraint b)) False
+instance isSupersetNotFalse1 ::
+  IsSuperset (LessThanConstraint a) (NotConstraint (LessThanConstraint b)) False
 
-instance rationalNotFalse2 ::
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (LessThanOrEqualToConstraint b) False
+instance isSupersetNotFalse2 ::
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (LessThanOrEqualToConstraint b) False
 
-instance rationalNotFalse3 ::
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (NotConstraint (LessThanOrEqualToConstraint b)) False
+instance isSupersetNotFalse3 ::
+  IsSuperset (LessThanOrEqualToConstraint a) (NotConstraint (LessThanOrEqualToConstraint b)) False
 
-instance rationalNotFalse4 ::
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (LessThanConstraint b) False
+instance isSupersetNotFalse4 ::
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (LessThanConstraint b) False
 
-instance rationalNotFalse5 ::
-  InvokableRationalRep (LessThanOrEqualToConstraint a) (NotConstraint (LessThanConstraint b)) False
+instance isSupersetNotFalse5 ::
+  IsSuperset (LessThanOrEqualToConstraint a) (NotConstraint (LessThanConstraint b)) False
 
-instance rationalNotFalse6 ::
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (LessThanOrEqualToConstraint b) False
+instance isSupersetNotFalse6 ::
+  IsSuperset (NotConstraint (LessThanConstraint a)) (LessThanOrEqualToConstraint b) False
 
-instance rationalNotFalse7 ::
-  InvokableRationalRep (LessThanConstraint a) (NotConstraint (LessThanOrEqualToConstraint b)) False
+instance isSupersetNotFalse7 ::
+  IsSuperset (LessThanConstraint a) (NotConstraint (LessThanOrEqualToConstraint b)) False
 
-instance rationalNotLessThanRight0 ::
-  InvokableRationalRep x (LessThanConstraint a) b =>
-  InvokableRationalRep (NotConstraint (NotConstraint x)) (LessThanConstraint a) b
+instance isSupersetNotLessThanRight0 ::
+  IsSuperset x (LessThanConstraint a) b =>
+  IsSuperset (NotConstraint (NotConstraint x)) (LessThanConstraint a) b
 
-instance rationalNotLessThanEqRight0 ::
-  InvokableRationalRep x (LessThanOrEqualToConstraint a) b =>
-  InvokableRationalRep (NotConstraint (NotConstraint x)) (LessThanOrEqualToConstraint a) b
+instance isSupersetNotLessThanEqRight0 ::
+  IsSuperset x (LessThanOrEqualToConstraint a) b =>
+  IsSuperset (NotConstraint (NotConstraint x)) (LessThanOrEqualToConstraint a) b
 
-instance rationalNotLessNotNot ::
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) x b =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (NotConstraint x)) b
+instance isSupersetNotLessNotNot ::
+  IsSuperset (NotConstraint (LessThanConstraint a)) x b =>
+  IsSuperset (NotConstraint (LessThanConstraint a)) (NotConstraint (NotConstraint x)) b
 
-instance rationalNotLessEqNotNot ::
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) x b =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (NotConstraint x)) b
+instance isSupersetNotLessEqNotNot ::
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) x b =>
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (NotConstraint x)) b
 
-instance rationalNotLessNotAnd ::
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (AndConstraint x y)) b
+instance isSupersetNotLessNotAnd ::
+  IsSuperset (NotConstraint (LessThanConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
+  IsSuperset (NotConstraint (LessThanConstraint a)) (NotConstraint (AndConstraint x y)) b
 
-instance rationalNotLessEqNotAnd ::
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (AndConstraint x y)) b
+instance isSupersetNotLessEqNotAnd ::
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (OrConstraint (NotConstraint x) (NotConstraint y)) b =>
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (AndConstraint x y)) b
 
-instance rationalNotLessNotOr ::
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint a)) (NotConstraint (OrConstraint x y)) b
+instance isSupersetNotLessNotOr ::
+  IsSuperset (NotConstraint (LessThanConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
+  IsSuperset (NotConstraint (LessThanConstraint a)) (NotConstraint (OrConstraint x y)) b
 
-instance rationalNotLessEqNotOr ::
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (OrConstraint x y)) b
+instance isSupersetNotLessEqNotOr ::
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (AndConstraint (NotConstraint x) (NotConstraint y)) b =>
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint a)) (NotConstraint (OrConstraint x y)) b
 
 -- 
 -- not not
-instance rationalNotNotL0 ::
-  InvokableRationalRep a (NotConstraint x) c =>
-  InvokableRationalRep (NotConstraint (NotConstraint a)) (NotConstraint x) c
+instance isSupersetNotNotL0 ::
+  IsSuperset a (NotConstraint x) c =>
+  IsSuperset (NotConstraint (NotConstraint a)) (NotConstraint x) c
 
-instance rationalNotNotL1 ::
-  InvokableRationalRep a (AndConstraint x y) c =>
-  InvokableRationalRep (NotConstraint (NotConstraint a)) (AndConstraint x y) c
+instance isSupersetNotNotL1 ::
+  IsSuperset a (AndConstraint x y) c =>
+  IsSuperset (NotConstraint (NotConstraint a)) (AndConstraint x y) c
 
-instance rationalNotNotL2 ::
-  InvokableRationalRep a (OrConstraint x y) c =>
-  InvokableRationalRep (NotConstraint (NotConstraint a)) (OrConstraint x y) c
+instance isSupersetNotNotL2 ::
+  IsSuperset a (OrConstraint x y) c =>
+  IsSuperset (NotConstraint (NotConstraint a)) (OrConstraint x y) c
 
-instance rationalNotNotR0 ::
-  InvokableRationalRep (LessThanConstraint x) a c =>
-  InvokableRationalRep (LessThanConstraint x) (NotConstraint (NotConstraint a)) c
+instance isSupersetNotNotR0 ::
+  IsSuperset (LessThanConstraint x) a c =>
+  IsSuperset (LessThanConstraint x) (NotConstraint (NotConstraint a)) c
 
-instance rationalNotNotR1 ::
-  InvokableRationalRep (LessThanOrEqualToConstraint x) a c =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (NotConstraint (NotConstraint a)) c
+instance isSupersetNotNotR1 ::
+  IsSuperset (LessThanOrEqualToConstraint x) a c =>
+  IsSuperset (LessThanOrEqualToConstraint x) (NotConstraint (NotConstraint a)) c
 
-instance rationalNotNotR2 ::
-  (InvokableRationalRep x a c, InvokableRationalRep y a d, And c d e) =>
-  InvokableRationalRep (AndConstraint x y) (NotConstraint (NotConstraint a)) e
+instance isSupersetNotNotR2 ::
+  (IsSuperset x a c, IsSuperset y a d, And c d e) =>
+  IsSuperset (AndConstraint x y) (NotConstraint (NotConstraint a)) e
 
-instance rationalNotNotR3 ::
-  (InvokableRationalRep x a c, InvokableRationalRep y a d, Or c d e) =>
-  InvokableRationalRep (OrConstraint x y) (NotConstraint (NotConstraint a)) e
+instance isSupersetNotNotR3 ::
+  (IsSuperset x a c, IsSuperset y a d, Or c d e) =>
+  IsSuperset (OrConstraint x y) (NotConstraint (NotConstraint a)) e
 
 ---- not and
-instance rationalNotAndL ::
-  ( InvokableRationalRep (NotConstraint a) x c
-  , InvokableRationalRep (NotConstraint b) x d
+instance isSupersetNotAndL ::
+  ( IsSuperset (NotConstraint a) x c
+  , IsSuperset (NotConstraint b) x d
   , Or c d e
   ) =>
-  InvokableRationalRep (NotConstraint (AndConstraint a b)) x e
+  IsSuperset (NotConstraint (AndConstraint a b)) x e
 
-instance rationalNotAndR0 ::
-  InvokableRationalRep
+instance isSupersetNotAndR0 ::
+  IsSuperset
       (LessThanConstraint x)
       (OrConstraint (NotConstraint a) (NotConstraint b))
       e =>
-  InvokableRationalRep (LessThanConstraint x) (NotConstraint (AndConstraint a b)) e
+  IsSuperset (LessThanConstraint x) (NotConstraint (AndConstraint a b)) e
 
-instance rationalNotAndR1 ::
-  InvokableRationalRep
+instance isSupersetNotAndR1 ::
+  IsSuperset
       (LessThanOrEqualToConstraint x)
       (OrConstraint (NotConstraint a) (NotConstraint b))
       e =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (NotConstraint (AndConstraint a b)) e
+  IsSuperset (LessThanOrEqualToConstraint x) (NotConstraint (AndConstraint a b)) e
 
-instance rationalNotAndR3 ::
-  ( InvokableRationalRep x (OrConstraint (NotConstraint a) (NotConstraint b)) c
-  , InvokableRationalRep y (OrConstraint (NotConstraint a) (NotConstraint b)) d
+instance isSupersetNotAndR3 ::
+  ( IsSuperset x (OrConstraint (NotConstraint a) (NotConstraint b)) c
+  , IsSuperset y (OrConstraint (NotConstraint a) (NotConstraint b)) d
   , And c d e
   ) =>
-  InvokableRationalRep (AndConstraint x y) (NotConstraint (AndConstraint a b)) e
+  IsSuperset (AndConstraint x y) (NotConstraint (AndConstraint a b)) e
 
-instance rationalNotAndR4 ::
-  ( InvokableRationalRep x (OrConstraint (NotConstraint a) (NotConstraint b)) c
-  , InvokableRationalRep y (OrConstraint (NotConstraint a) (NotConstraint b)) d
+instance isSupersetNotAndR4 ::
+  ( IsSuperset x (OrConstraint (NotConstraint a) (NotConstraint b)) c
+  , IsSuperset y (OrConstraint (NotConstraint a) (NotConstraint b)) d
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint x y) (NotConstraint (AndConstraint a b)) e
+  IsSuperset (OrConstraint x y) (NotConstraint (AndConstraint a b)) e
 
 -- not or
-instance rationalNotOrL ::
-  ( InvokableRationalRep (NotConstraint a) x c
-  , InvokableRationalRep (NotConstraint b) x d
+instance isSupersetNotOrL ::
+  ( IsSuperset (NotConstraint a) x c
+  , IsSuperset (NotConstraint b) x d
   , And c d e
   ) =>
-  InvokableRationalRep (NotConstraint (OrConstraint a b)) x e
+  IsSuperset (NotConstraint (OrConstraint a b)) x e
 
-instance rationalNotOrR0 ::
-  InvokableRationalRep
+instance isSupersetNotOrR0 ::
+  IsSuperset
       (LessThanConstraint x)
       (AndConstraint (NotConstraint a) (NotConstraint b))
       c =>
-  InvokableRationalRep (LessThanConstraint x) (NotConstraint (OrConstraint a b)) c
+  IsSuperset (LessThanConstraint x) (NotConstraint (OrConstraint a b)) c
 
-instance rationalNotOrR1 ::
-  InvokableRationalRep
+instance isSupersetNotOrR1 ::
+  IsSuperset
       (LessThanOrEqualToConstraint x)
       (AndConstraint (NotConstraint a) (NotConstraint b))
       c =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (NotConstraint (OrConstraint a b)) c
+  IsSuperset (LessThanOrEqualToConstraint x) (NotConstraint (OrConstraint a b)) c
 
-instance rationalNotOrR2 ::
-  ( InvokableRationalRep x (AndConstraint (NotConstraint a) (NotConstraint b)) c
-  , InvokableRationalRep y (AndConstraint (NotConstraint a) (NotConstraint b)) d
+instance isSupersetNotOrR2 ::
+  ( IsSuperset x (AndConstraint (NotConstraint a) (NotConstraint b)) c
+  , IsSuperset y (AndConstraint (NotConstraint a) (NotConstraint b)) d
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint x y) (NotConstraint (OrConstraint a b)) e
+  IsSuperset (OrConstraint x y) (NotConstraint (OrConstraint a b)) e
 
-instance rationalNotOrR3 ::
-  ( InvokableRationalRep x (AndConstraint (NotConstraint a) (NotConstraint b)) c
-  , InvokableRationalRep y (AndConstraint (NotConstraint a) (NotConstraint b)) d
+instance isSupersetNotOrR3 ::
+  ( IsSuperset x (AndConstraint (NotConstraint a) (NotConstraint b)) c
+  , IsSuperset y (AndConstraint (NotConstraint a) (NotConstraint b)) d
   , And c d e
   ) =>
-  InvokableRationalRep (AndConstraint x y) (NotConstraint (OrConstraint a b)) e
+  IsSuperset (AndConstraint x y) (NotConstraint (OrConstraint a b)) e
 
 -- the ands
-instance rationalAndL0 ::
-  ( InvokableRationalRep a (LessThanConstraint x) c
-  , InvokableRationalRep b (LessThanConstraint x) d
+instance isSupersetAndL0 ::
+  ( IsSuperset a (LessThanConstraint x) c
+  , IsSuperset b (LessThanConstraint x) d
   , And c d e
   ) =>
-  InvokableRationalRep (AndConstraint a b) (LessThanConstraint x) e
+  IsSuperset (AndConstraint a b) (LessThanConstraint x) e
 
-instance rationalAndL1 ::
-  ( InvokableRationalRep a (LessThanOrEqualToConstraint x) c
-  , InvokableRationalRep b (LessThanOrEqualToConstraint x) d
+instance isSupersetAndL1 ::
+  ( IsSuperset a (LessThanOrEqualToConstraint x) c
+  , IsSuperset b (LessThanOrEqualToConstraint x) d
   , And c d e
   ) =>
-  InvokableRationalRep (AndConstraint a b) (LessThanOrEqualToConstraint x) e
+  IsSuperset (AndConstraint a b) (LessThanOrEqualToConstraint x) e
 
-instance rationalAndL3 ::
-  ( InvokableRationalRep a x q
-  , InvokableRationalRep a y r
-  , InvokableRationalRep b x s
-  , InvokableRationalRep b y t
+instance isSupersetAndL3 ::
+  ( IsSuperset a x q
+  , IsSuperset a y r
+  , IsSuperset b x s
+  , IsSuperset b y t
   , Or q r f
   , Or s t g
   , And f g e
   ) =>
-  InvokableRationalRep (AndConstraint a b) (AndConstraint x y) e
+  IsSuperset (AndConstraint a b) (AndConstraint x y) e
 
-instance rationalAndL4 ::
-  ( InvokableRationalRep a x q
-  , InvokableRationalRep a y r
-  , InvokableRationalRep b x s
-  , InvokableRationalRep b y t
+instance isSupersetAndL4 ::
+  ( IsSuperset a x q
+  , IsSuperset a y r
+  , IsSuperset b x s
+  , IsSuperset b y t
   , And q r f
   , And s t g
   , And c d e
   ) =>
-  InvokableRationalRep (AndConstraint a b) (OrConstraint x y) e
+  IsSuperset (AndConstraint a b) (OrConstraint x y) e
 
-instance rationalAndR0 ::
-  ( InvokableRationalRep (LessThanConstraint x) a q
-  , InvokableRationalRep (LessThanConstraint x) b r
+instance isSupersetAndR0 ::
+  ( IsSuperset (LessThanConstraint x) a q
+  , IsSuperset (LessThanConstraint x) b r
   , Or q r s
   ) =>
-  InvokableRationalRep (LessThanConstraint x) (AndConstraint a b) s
+  IsSuperset (LessThanConstraint x) (AndConstraint a b) s
 
-instance rationalAndR1 ::
-  ( InvokableRationalRep (LessThanOrEqualToConstraint x) a q
-  , InvokableRationalRep (LessThanOrEqualToConstraint x) b r
+instance isSupersetAndR1 ::
+  ( IsSuperset (LessThanOrEqualToConstraint x) a q
+  , IsSuperset (LessThanOrEqualToConstraint x) b r
   , Or q r s
   ) =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (AndConstraint a b) f
+  IsSuperset (LessThanOrEqualToConstraint x) (AndConstraint a b) f
 
-instance rationalAndRl ::
-  ( InvokableRationalRep (NotConstraint (LessThanConstraint x)) a q
-  , InvokableRationalRep (NotConstraint (LessThanConstraint x)) b r
+instance isSupersetAndRl ::
+  ( IsSuperset (NotConstraint (LessThanConstraint x)) a q
+  , IsSuperset (NotConstraint (LessThanConstraint x)) b r
   , Or q r s
   ) =>
-  InvokableRationalRep (NotConstraint (LessThanConstraint x)) (AndConstraint a b) f
+  IsSuperset (NotConstraint (LessThanConstraint x)) (AndConstraint a b) f
 
-instance rationalAndRle ::
-  ( InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) a q
-  , InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) b r
+instance isSupersetAndRle ::
+  ( IsSuperset (NotConstraint (LessThanOrEqualToConstraint x)) a q
+  , IsSuperset (NotConstraint (LessThanOrEqualToConstraint x)) b r
   , Or q r s
   ) =>
-  InvokableRationalRep (NotConstraint (LessThanOrEqualToConstraint x)) (AndConstraint a b) f
+  IsSuperset (NotConstraint (LessThanOrEqualToConstraint x)) (AndConstraint a b) f
 
-instance rationalAndR4 ::
-  ( InvokableRationalRep a x q
-  , InvokableRationalRep a y r
-  , InvokableRationalRep b x s
-  , InvokableRationalRep b y t
+instance isSupersetAndR4 ::
+  ( IsSuperset a x q
+  , IsSuperset a y r
+  , IsSuperset b x s
+  , IsSuperset b y t
   , Or q r f
   , Or s t g
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint x y) (AndConstraint a b) e
+  IsSuperset (OrConstraint x y) (AndConstraint a b) e
 
 -- the ors
-instance rationalOrL0 ::
-  ( InvokableRationalRep a (LessThanConstraint x) c
-  , InvokableRationalRep b (LessThanConstraint x) d
+instance isSupersetOrL0 ::
+  ( IsSuperset a (LessThanConstraint x) c
+  , IsSuperset b (LessThanConstraint x) d
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint a b) (LessThanConstraint x) e
+  IsSuperset (OrConstraint a b) (LessThanConstraint x) e
 
-instance rationalOrL1 ::
-  ( InvokableRationalRep a (LessThanOrEqualToConstraint x) c
-  , InvokableRationalRep b (LessThanOrEqualToConstraint x) d
+instance isSupersetOrL1 ::
+  ( IsSuperset a (LessThanOrEqualToConstraint x) c
+  , IsSuperset b (LessThanOrEqualToConstraint x) d
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint a b) (LessThanOrEqualToConstraint x) e
+  IsSuperset (OrConstraint a b) (LessThanOrEqualToConstraint x) e
 
-instance rationalOrL4 ::
-  ( InvokableRationalRep a x q
-  , InvokableRationalRep a y r
-  , InvokableRationalRep b x s
-  , InvokableRationalRep b y t
+instance isSupersetOrL4 ::
+  ( IsSuperset a x q
+  , IsSuperset a y r
+  , IsSuperset b x s
+  , IsSuperset b y t
   , And q r f
   , And s t g
   , Or c d e
   ) =>
-  InvokableRationalRep (OrConstraint a b) (OrConstraint x y) e
+  IsSuperset (OrConstraint a b) (OrConstraint x y) e
 
-instance rationalOrR0 ::
-  ( InvokableRationalRep (LessThanConstraint x) a q
-  , InvokableRationalRep (LessThanConstraint x) b r
+instance isSupersetOrR0 ::
+  ( IsSuperset (LessThanConstraint x) a q
+  , IsSuperset (LessThanConstraint x) b r
   , And q r s
   ) =>
-  InvokableRationalRep (LessThanConstraint x) (OrConstraint a b) s
+  IsSuperset (LessThanConstraint x) (OrConstraint a b) s
 
-instance rationalOrR1 ::
-  ( InvokableRationalRep (LessThanOrEqualToConstraint x) a q
-  , InvokableRationalRep (LessThanOrEqualToConstraint x) b r
+instance isSupersetOrR1 ::
+  ( IsSuperset (LessThanOrEqualToConstraint x) a q
+  , IsSuperset (LessThanOrEqualToConstraint x) b r
   , And q r s
   ) =>
-  InvokableRationalRep (LessThanOrEqualToConstraint x) (OrConstraint a b) s
+  IsSuperset (LessThanOrEqualToConstraint x) (OrConstraint a b) s
 
 class Gate (a :: Boolean) (b :: ConstrainedRational) (c :: ConstrainedRational) (d :: ConstrainedRational) | a b c -> d
 
@@ -1427,31 +1427,31 @@ type RatioI r
 class Rational (a :: Rational) where
   toRational :: RatioI a
 
-instance rationalZ :: Rational Zero where
+instance isSupersetZ :: Rational Zero where
   toRational = R 0 1
 
-instance rationalPOne :: Rational (PRational POne POne) where
+instance isSupersetPOne :: Rational (PRational POne POne) where
   toRational = R 1 1
 
-instance rationalPS1 :: Rational (PRational n POne) => Rational (PRational (PSuc n) POne) where
+instance isSupersetPS1 :: Rational (PRational n POne) => Rational (PRational (PSuc n) POne) where
   toRational = let (R x y) = (toRational :: RatioI (PRational n POne)) in R (1 + x) y
 
-instance rationalP1S :: Rational (PRational POne n) => Rational (PRational POne (PSuc n)) where
+instance isSupersetP1S :: Rational (PRational POne n) => Rational (PRational POne (PSuc n)) where
   toRational = let (R x y) = (toRational :: RatioI (PRational POne n)) in R x (1 + y)
 
-instance rationalPSS :: Rational (PRational n m) => Rational (PRational (PSuc n) (PSuc m)) where
+instance isSupersetPSS :: Rational (PRational n m) => Rational (PRational (PSuc n) (PSuc m)) where
   toRational = let (R x y) = (toRational :: RatioI (PRational n m)) in R (x + 1) (y + 1)
 
-instance rationalNOne :: Rational (NRational NOne POne) where
+instance isSupersetNOne :: Rational (NRational NOne POne) where
   toRational = R (negate 1) 1
 
-instance rationalNS1 :: Rational (NRational n POne) => Rational (NRational (NSuc n) POne) where
+instance isSupersetNS1 :: Rational (NRational n POne) => Rational (NRational (NSuc n) POne) where
   toRational = let (R x y) = (toRational :: RatioI (NRational n POne)) in R (x - 1) y
 
-instance rationalN1S :: Rational (NRational NOne n) => Rational (NRational NOne (PSuc n)) where
+instance isSupersetN1S :: Rational (NRational NOne n) => Rational (NRational NOne (PSuc n)) where
   toRational = let (R x y) = (toRational :: RatioI (NRational NOne n)) in R x (1 + y)
 
-instance rationalNSS :: Rational (NRational n m) => Rational (NRational (NSuc n) (PSuc m)) where
+instance isSupersetNSS :: Rational (NRational n m) => Rational (NRational (NSuc n) (PSuc m)) where
   toRational = let (R x y) = (toRational :: RatioI (NRational n m)) in R (x - 1) (y + 1)
 
 ----- rational to a ratio
