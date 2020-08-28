@@ -34,9 +34,9 @@ foreign import data PRational :: PInt -> PInt -> Rational
 
 foreign import data NRational :: NInt -> PInt -> Rational
 
-infix 6 type PRational as /~
+infix 6 type PRational as +/
 
-infix 6 type NRational as //~
+infix 6 type NRational as -/
 
 ----- constrained rational constructors
 foreign import data LessThanConstraint :: Rational -> ConstrainedRational
@@ -48,6 +48,19 @@ foreign import data NotConstraint :: ConstrainedRational -> ConstrainedRational
 foreign import data AndConstraint :: ConstrainedRational -> ConstrainedRational -> ConstrainedRational
 
 foreign import data OrConstraint :: ConstrainedRational -> ConstrainedRational -> ConstrainedRational
+
+type Lt
+  = LessThanConstraint
+
+type Lte
+  = LessThanOrEqualToConstraint
+
+type Nt
+  = NotConstraint
+
+infix 6 type AndConstraint as &&/
+
+infix 6 type OrConstraint as ||/
 
 ----- proxy for a rational
 data CRProxy (r :: ConstrainedRational)
