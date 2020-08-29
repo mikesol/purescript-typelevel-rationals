@@ -6,7 +6,7 @@ import Effect (Effect)
 import Effect.Class.Console (log)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GreaterThan, class InvokableRational, class LessThan, CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, Lt, Lte, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P9, RProxy(..), RatioI, Zero, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, kind ConstrainedRational, type (&&/), type (+/), type (-/))
+import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GCD, class GreaterThan, class InvokableRational, class LessThan, class Mod, class Numerator, class PeanoToRational, class Sub, type (&&/), type (+/), type (-/), CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, EqConstraint, Lt, Lte, N1, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P6, P7, P8, P9, Pe10, Pe2, Pe3, Pe5, Pe6, Pe7, Pe8, PeanoProxy(..), RProxy(..), RatioI, Zero, Pe1, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, toRational, kind ConstrainedRational)
 
 type Foo
   = (P1 +/ P2)
@@ -26,11 +26,35 @@ test3 = BProxy :: ∀ b. LessThan (P2 +/ P3) (P2 +/ P3) b => BProxy b
 test4 :: BProxy True
 test4 = BProxy :: ∀ v b. Add (P1 +/ P2) (P2 +/ P5) v => Equal v (P9 +/ P10) b => BProxy b
 
+test4_1 :: BProxy True
+test4_1 = BProxy :: ∀ v b. Sub (P3 +/ P2) (P1 +/ P2) v => Equal v (P1 +/ P1) b => BProxy b
+
 test5 :: BProxy False
 test5 = BProxy :: ∀ v b. Add (P1 +/ P3) (P2 +/ P5) v => Equal v (P9 +/ P10) b => BProxy b
 
 test6 :: RProxy (P1 +/ P1)
 test6 = RProxy :: forall a. LessThan a (P3 +/ P2) True => GreaterThan a Zero True => RProxy a
+
+test7 :: RProxy (P1 +/ P1)
+test7 = RProxy :: ∀ v. Mod (P1 +/ P1) (P6 +/ P1) v => RProxy v
+
+test8 :: RProxy (P1 +/ P1)
+test8 = RProxy :: ∀ v. Mod (P7 +/ P1) (P6 +/ P1) v => RProxy v
+
+test9_1 :: PeanoProxy Pe2
+test9_1 = PeanoProxy :: forall c. Numerator (P2 +/ P7) c => PeanoProxy c
+
+test9_2 :: RProxy (P3 +/ P1)
+test9_2 = RProxy :: forall c. PeanoToRational Pe3 c => RProxy c
+
+test9 :: PeanoProxy Pe2
+test9 = PeanoProxy :: forall c. GCD Pe8 Pe6 c => PeanoProxy c
+
+test9_3 :: PeanoProxy Pe5
+test9_3 = PeanoProxy :: forall c. GCD Pe10 Pe5 c => PeanoProxy c
+
+test9_4 :: PeanoProxy Pe1
+test9_4 = PeanoProxy :: forall c. GCD Pe7 Pe5 c => PeanoProxy c
 
 testf0 :: CRProxy (Lt (P3 +/ P2)) -> CRProxy (Lt Zero)
 testf0 _ = CRProxy
@@ -133,6 +157,7 @@ returnAQuarter _ =
         )
     )
 
+myQuarterBack :: Maybe (ConstrainedRatioI ((Nt (Lt (P1 +/ P4))) &&/ (Lte (P1 +/ P4))))
 myQuarterBack = invoke returnAQuarter <$> oneHalfPrecise
 
 threeHalvesPrecise =
@@ -149,6 +174,7 @@ threeHalvesPrecise =
 -- myQuarterBackRed = invoke returnAQuarter <$> threeHalvesPrecise
 main :: Effect Unit
 main = do
+  log (show ((toRational :: RatioI (N1 -/ P3))))
   log (show ((asConstraintedRational 3 2 :: Maybe (ConstrainedRatioI (Lte (P3 +/ P2))))))
   log (show ((asConstraintedRational 1 2 :: Maybe (ConstrainedRatioI (Lte (P3 +/ P2))))))
   log (show ((asConstraintedRational 5 2 :: Maybe (ConstrainedRatioI (Lte (P3 +/ P2))))))
@@ -212,7 +238,7 @@ type Gte0lt1
   = ((Nt (Lt Zero)) &&/ (Lt (P1 +/ P1)))
 
 type IsOneHalf
-  = ((Nt (Lt (P1 +/ P2))) &&/ (Lt (P1 +/ P2)))
+  = EqConstraint (P1 +/ P2)
 
 type IsOne
   = ((Nt (Lt (P4 +/ P4))) &&/ (Lt (P4 +/ P4)))

@@ -17,6 +17,12 @@ foreign import kind PInt
 
 foreign import kind NInt
 
+foreign import kind Peano
+
+foreign import data ZeroPeano :: Peano
+
+foreign import data SuccPeano :: Peano -> Peano
+
 ----- positive int type constructors
 foreign import data POne :: PInt
 
@@ -61,6 +67,9 @@ type Nt
 infix 6 type AndConstraint as &&/
 
 infix 6 type OrConstraint as ||/
+
+type EqConstraint a
+  = ((Nt (Lt a)) &&/ (Lt a))
 
 ----- proxy for a rational
 data CRProxy (r :: ConstrainedRational)
@@ -585,6 +594,36 @@ type P9
 type P10
   = PSuc (P9)
 
+type Pe1
+  = SuccPeano ZeroPeano
+
+type Pe2
+  = SuccPeano (Pe1)
+
+type Pe3
+  = SuccPeano (Pe2)
+
+type Pe4
+  = SuccPeano (Pe3)
+
+type Pe5
+  = SuccPeano (Pe4)
+
+type Pe6
+  = SuccPeano (Pe5)
+
+type Pe7
+  = SuccPeano (Pe6)
+
+type Pe8
+  = SuccPeano (Pe7)
+
+type Pe9
+  = SuccPeano (Pe8)
+
+type Pe10
+  = SuccPeano (Pe9)
+
 type N1
   = NOne
 
@@ -616,6 +655,10 @@ type N9
 ----- proxy for a rational
 data RProxy (r :: Rational)
   = RProxy
+
+----- proxy for a peano
+data PeanoProxy (r :: Peano)
+  = PeanoProxy
 
 ----- flips a positive int to a negative int
 class ToP (a :: NInt) (b :: PInt) | a -> b
@@ -1285,7 +1328,7 @@ instance addPP :: (PMul n0 d1 left, PMul n1 d0 right, PMul d0 d1 d2, PAdd left r
 ----- subtract two rationals
 class Sub (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
 
-instance sub :: (Add a b c, Flip b d) => Sub a d c
+instance sub :: (Flip b d, Add a d c) => Sub a b c
 
 ----- invert a rational
 class Inv (a :: Rational) (b :: Rational) | a -> b
@@ -1298,6 +1341,76 @@ instance invN :: (ToP a x, ToN b y) => Inv (NRational a b) (NRational y x)
 class Div (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
 
 instance div :: (Mul a b c, Inv c d) => Div a b d
+
+class GCD (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
+
+instance gcdZero :: GCD ZeroPeano b b
+
+instance gcdPos :: (GCDLoop False (SuccPeano a) (SuccPeano a) (SuccPeano b) c) => GCD (SuccPeano a) (SuccPeano b) c
+
+class PeanoToRational (p :: Peano) (r :: Rational) | p -> r
+
+class Numerator (r :: Rational) (p :: Peano) | r -> p
+
+class IsZeroPeano (p :: Peano) (b :: Boolean) | p -> b
+
+instance isZeroPeanoZero :: IsZeroPeano ZeroPeano True
+
+instance isZeroPeanoSuc :: IsZeroPeano (SuccPeano a) False
+
+instance numeratorZero :: Numerator Zero ZeroPeano
+
+instance numeratorSuc :: Numerator (PRational POne x) (SuccPeano ZeroPeano)
+
+instance numeratorSuc1 :: Numerator (PRational b x) (SuccPeano a) => Numerator (PRational (PSuc b) x) (SuccPeano (SuccPeano a))
+
+instance peanoToRationalZero :: PeanoToRational ZeroPeano Zero
+
+instance peanoToRationalSuc :: PeanoToRational (SuccPeano ZeroPeano) (PRational POne POne)
+
+instance peanoToRationalSuc1 :: PeanoToRational (SuccPeano a) (PRational b POne) => PeanoToRational (SuccPeano (SuccPeano a)) (PRational (PSuc b) POne)
+
+class GCDLoop (gate :: Boolean) (default :: Peano) (a :: Peano) (b :: Peano) (c :: Peano) | gate default a b -> c
+
+instance gcdLoopTrue :: GCDLoop True default a b default
+
+instance gcdLoopFalse :: (PeanoToRational a rata, PeanoToRational b ratb, Mod rata ratb c, Numerator c num, IsZeroPeano num isZero, GCDLoop isZero b b num d) => GCDLoop False default a b d
+
+class Mod (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
+
+instance modZeroP :: Mod Zero (PRational a x) Zero
+
+instance modZeroN :: Mod Zero (NRational a x) Zero
+
+instance modPos :: ModPosLoop False (PRational a x) (PRational a x) (PRational b y) c => Mod (PRational a x) (PRational b y) c
+
+instance modNeg :: ModNegLoop False (NRational a x) (NRational a x) (NRational b y) c => Mod (NRational a x) (NRational b y) c
+
+instance modNegPos :: ModNegPosLoop False (NRational a x) (NRational a x) (PRational b y) c => Mod (NRational a x) (PRational b y) c
+
+class ModPosLoop (gate :: Boolean) (default :: Rational) (a :: Rational) (b :: Rational) (c :: Rational) | gate default a b -> c
+
+instance returnDefaultModPosLoop :: ModPosLoop True default a b default
+
+instance recursiveModPosLoop :: (LessThan a b res, Sub a b sub, ModPosLoop res a sub b c) => ModPosLoop False default a b c
+
+class ModNegLoop (gate :: Boolean) (default :: Rational) (a :: Rational) (b :: Rational) (c :: Rational) | gate default a b -> c
+
+instance returnDefaultModNegLoop :: ModNegLoop True default a b default
+
+instance recursiveModNegLoop :: (GreaterThan a b res, Add a b sub, ModNegLoop res a sub b c) => ModNegLoop False default a b c
+
+class ModNegPosLoop (gate :: Boolean) (default :: Rational) (a :: Rational) (b :: Rational) (c :: Rational) | gate default a b -> c
+
+instance returnDefaultModNegPosLoop :: (Add a b c) => ModNegPosLoop True default a b c
+
+instance recursiveModNegPosLoop :: (Flip a flipped, LessThan flipped b res, Add a b sub, ModNegPosLoop res a sub b c) => ModNegPosLoop False default a b c
+
+class ModPosNegLoop (gate :: Boolean) (default :: Rational) (a :: Rational) (b :: Rational) (c :: Rational) | gate default a b -> c
+
+instance returnDefaultModPosNegLoop :: (Add a b c) => ModPosNegLoop True default a b c
+
+instance recursiveModPosNegLoop :: (Flip b flipped, LessThan a flipped res, Add a b sub, ModPosNegLoop res a sub b c) => ModPosNegLoop False default a b c
 
 ---- adds two rationals
 ---- uses rank-n types so that qualification can be partially applied
@@ -1431,6 +1544,9 @@ inflectGreaterThanOrEqualTo _ a b = a b
 ----- representation of a rational with numbers
 data Ratio (r :: Rational) a b
   = R a b
+
+instance showRatio :: (Show a, Show b) => Show (Ratio r a b) where
+  show (R i j) = (show i) <> " % " <> (show j)
 
 ----- representation of a rational with integers
 type RatioI r
