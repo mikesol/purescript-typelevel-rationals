@@ -6,7 +6,7 @@ import Effect (Effect)
 import Effect.Class.Console (log)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GCD, class GreaterThan, class InvokableRational, class LessThan, class Mod, class Numerator, class PeanoToRational, class Sub, type (&&/), type (+/), type (-/), CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, EqConstraint, Lt, Lte, N1, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P6, P7, P8, P9, Pe10, Pe2, Pe3, Pe5, Pe6, Pe7, Pe8, PeanoProxy(..), RProxy(..), RatioI, Zero, Pe1, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, toRational, kind ConstrainedRational)
+import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GCD, class GreaterThan, class InvokableRational, class LessThan, class Mod, class Numerator, class PeanoDiv, class PeanoToRational, class Reduce, class Sub, type (&&/), type (+/), type (-/), CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, EqConstraint, Lt, Lte, N1, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P6, P7, P9, Pe1, Pe10, Pe2, Pe3, Pe5, Pe6, Pe7, Pe8, PeanoProxy(..), RProxy(..), RatioI, Zero, Pe4, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, toRational, kind ConstrainedRational)
 
 type Foo
   = (P1 +/ P2)
@@ -56,6 +56,16 @@ test9_3 = PeanoProxy :: forall c. GCD Pe10 Pe5 c => PeanoProxy c
 test9_4 :: PeanoProxy Pe1
 test9_4 = PeanoProxy :: forall c. GCD Pe7 Pe5 c => PeanoProxy c
 
+test9_5 :: PeanoProxy Pe2
+test9_5 = PeanoProxy :: forall c. PeanoDiv Pe8 Pe4 c => PeanoProxy c
+
+{-
+test9_6 :: PeanoProxy Pe4
+test9_6 = PeanoProxy :: forall c. PeanoDiv Pe8 Pe2 c => PeanoProxy c
+
+test10 :: RProxy (P3 +/ P1)
+test10 = RProxy :: forall c. Reduce (P9 +/ P3) c => RProxy c
+-}
 testf0 :: CRProxy (Lt (P3 +/ P2)) -> CRProxy (Lt Zero)
 testf0 _ = CRProxy
 

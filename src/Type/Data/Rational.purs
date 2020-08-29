@@ -496,6 +496,12 @@ instance gateRTrue :: GateR True b c b
 
 instance gateRFalse :: GateR False b c c
 
+class GateP (a :: Boolean) (b :: Peano) (c :: Peano) (d :: Peano) | a b c -> d
+
+instance gatePTrue :: GateP True b c b
+
+instance gatePFalse :: GateP False b c c
+
 ----------------------------
 -- a rational where only one value is inhabited
 class ResolvableRational (a :: ConstrainedRational) (b :: Rational) | a -> b where
@@ -1342,6 +1348,34 @@ class Div (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
 
 instance div :: (Mul a b c, Inv c d) => Div a b d
 
+class PeanoDiv (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
+
+instance peanoDivZ :: (PeanoDivInternal ZeroPeano ZeroPeano a (SuccPeano b) c) => PeanoDiv ZeroPeano (SuccPeano b) ZeroPeano
+
+instance peanoDivS :: (PeanoDivInternal ZeroPeano (SuccPeano ZeroPeano) a (SuccPeano b) c) => PeanoDiv (SuccPeano a) (SuccPeano b) c
+
+class PeanoEq (q :: Peano) (r :: Peano) (b :: Boolean) | q r -> b
+
+instance pe0 :: PeanoEq ZeroPeano (SuccPeano a) False
+
+instance pe1 :: PeanoEq (SuccPeano a) ZeroPeano False
+
+instance pe2 :: PeanoEq ZeroPeano ZeroPeano True
+
+instance pe3 :: PeanoEq a b c => PeanoEq (SuccPeano a) (SuccPeano b) c
+
+class Reduce (a :: Rational) (b :: Rational) | a -> b
+
+instance reduceReduce :: (Numerator a num, Denominator a den, GCD num den gcd, PeanoDiv num gcd q, PeanoDiv den gcd r, PeanoToRational q qrat, PeanoToRational r rrat, Div qrat rrat b) => Reduce a b
+
+class PeanoDivInternal (q :: Peano) (r :: Peano) (a :: Peano) (b :: Peano) (c :: Peano) | q r a b -> c
+
+instance peanoDivInternalZ :: PeanoDivInternal q r ZeroPeano b q
+
+-- backwards, can't ever increase on left
+XX
+instance peanoDivInternalDown :: (PeanoEq b r eq, GateP eq (SuccPeano q) q newq, GateP eq ZeroPeano (SuccPeano r) newr, GateP eq (SuccPeano a) a newa, PeanoDivInternal newq newr newa b c) => PeanoDivInternal q r (SuccPeano a) b c
+
 class GCD (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
 
 instance gcdZero :: GCD ZeroPeano b b
@@ -1351,6 +1385,8 @@ instance gcdPos :: (GCDLoop False (SuccPeano a) (SuccPeano a) (SuccPeano b) c) =
 class PeanoToRational (p :: Peano) (r :: Rational) | p -> r
 
 class Numerator (r :: Rational) (p :: Peano) | r -> p
+
+class Denominator (r :: Rational) (p :: Peano) | r -> p
 
 class IsZeroPeano (p :: Peano) (b :: Boolean) | p -> b
 
@@ -1362,7 +1398,11 @@ instance numeratorZero :: Numerator Zero ZeroPeano
 
 instance numeratorSuc :: Numerator (PRational POne x) (SuccPeano ZeroPeano)
 
+instance demoninatorSuc :: Denominator (PRational x POne) (SuccPeano ZeroPeano)
+
 instance numeratorSuc1 :: Numerator (PRational b x) (SuccPeano a) => Numerator (PRational (PSuc b) x) (SuccPeano (SuccPeano a))
+
+instance demoninatorSuc1 :: Denominator (PRational x b) (SuccPeano a) => Denominator (PRational x (PSuc b)) (SuccPeano (SuccPeano a))
 
 instance peanoToRationalZero :: PeanoToRational ZeroPeano Zero
 
