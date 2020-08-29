@@ -1355,7 +1355,20 @@ class PeanoDiv (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
 
 instance peanoDivZ :: PeanoDiv ZeroPeano b ZeroPeano
 
-instance peanoDivS :: (PeanoDivInternal (SuccPeano a) b b q) => PeanoDiv (SuccPeano a) b q
+instance peanoDivS :: (PeanoDivInternal False (SuccPeano a) (SuccPeano a) b q) => PeanoDiv (SuccPeano a) b q
+
+class PeanoDivInternal (gate :: Boolean) (default :: Peano) (a :: Peano) (b :: Peano) (c :: Peano) | gate default a b -> c
+
+instance peanoDivIZ :: PeanoDivInternal True default a b default
+
+instance peanoDivIS ::
+  ( LessThanPeano (SuccPeano a) b eq
+  , SubPeano (SuccPeano a) b n
+  , PeanoDivInternal eq (SuccPeano q) n b q
+  ) =>
+  PeanoDivInternal False default (SuccPeano a) b (SuccPeano q)
+
+instance peanoDivIHack :: PeanoDivInternal False default ZeroPeano b ZeroPeano
 
 class PeanoEq (q :: Peano) (r :: Peano) (b :: Boolean) | q r -> b
 
@@ -1371,13 +1384,25 @@ class Reduce (a :: Rational) (b :: Rational) | a -> b
 
 instance reduceReduce :: (Numerator a num, Denominator a den, GCD num den gcd, PeanoDiv num gcd q, PeanoDiv den gcd r, PeanoToPInt q qrat_, PeanoToPInt r rrat_, Sub (PRational qrat_ P1) (PRational POne POne) qrat, Sub (PRational rrat_ POne) (PRational POne POne) rrat, Div qrat rrat b) => Reduce a b
 
-class PeanoDivInternal (a :: Peano) (b :: Peano) (r :: Peano) (q :: Peano) | a b r -> q
+class LessThanPeano (a :: Peano) (b :: Peano) (bool :: Boolean) | a b -> bool
 
-instance peanoDivInternalDone :: PeanoDivInternal ZeroPeano b r q
+instance lessThanPeanoZZ :: LessThanPeano ZeroPeano ZeroPeano False
 
-instance peanoDivInternalQuotient :: PeanoDivInternal a b b q => PeanoDivInternal (SuccPeano a) b ZeroPeano (SuccPeano q)
+instance lessThanPeanoZS :: LessThanPeano ZeroPeano (SuccPeano a) True
 
-instance peanoDivInternalRemainder :: PeanoDivInternal a b r q => PeanoDivInternal (SuccPeano a) b (SuccPeano r) q
+instance lessThanPeanoSZ :: LessThanPeano (SuccPeano a) ZeroPeano False
+
+instance lessThanPeanoSS :: LessThanPeano a b c => LessThanPeano (SuccPeano a) (SuccPeano b) c
+
+class SubPeano (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
+
+instance subP0 ::
+  ( PeanoToPInt a a_
+  , PeanoToPInt b b_
+  , Sub (PRational a_ POne) (PRational b_ POne) q
+  , Numerator q c
+  ) =>
+  SubPeano a b c
 
 class GCD (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
 
@@ -1392,6 +1417,8 @@ instance peanoToRationalZero :: PeanoToPInt ZeroPeano POne
 instance peanoToRationalSuc1 :: PeanoToPInt a b => PeanoToPInt (SuccPeano a) (PSuc b)
 
 class Numerator (r :: Rational) (p :: Peano) | r -> p
+
+instance numeratorNeg :: Numerator (NRational x y) ZeroPeano
 
 instance numeratorZero :: Numerator Zero ZeroPeano
 
