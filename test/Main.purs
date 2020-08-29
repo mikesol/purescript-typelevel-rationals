@@ -6,7 +6,7 @@ import Effect (Effect)
 import Effect.Class.Console (log)
 import Prim.Boolean (False, True)
 import Type.Data.Boolean (BProxy(..))
-import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GCD, class GreaterThan, class InvokableRational, class LessThan, class Mod, class Numerator, class PeanoDiv, class PeanoToRational, class Reduce, class Sub, type (&&/), type (+/), type (-/), CRProxy(..), ConstrainedRatio(..), ConstrainedRatioI, EqConstraint, Lt, Lte, N1, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P6, P7, P9, Pe1, Pe10, Pe2, Pe3, Pe5, Pe6, Pe7, Pe8, PeanoProxy(..), RProxy(..), RatioI, Zero, Pe4, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, toRational, kind ConstrainedRational)
+import Type.Data.Rational (class Add, class AddConstraint, class Equal, class GCD, class GreaterThan, class Div, class InvokableRational, class LessThan, class Mod, class Numerator, class PeanoDiv, class PeanoToPInt, class Reduce, class Sub, type (&&/), type (+/), type (-/), CRProxy(..), class Denominator, ConstrainedRatio(..), ConstrainedRatioI, EqConstraint, PIntProxy(..), Lt, Lte, N1, N2, N3, N4, Nt, P1, P10, P2, P3, P4, P5, P6, P7, P9, Pe1, Pe10, Pe2, Pe3, Pe5, Pe6, Pe7, Pe8, Pe9, PeanoProxy(..), RProxy(..), RatioI, Zero, Pe4, addConstrainedRationals, asConstraintedRational, constConstrained, invoke, invokeTest, resolve, toRational, kind ConstrainedRational)
 
 type Foo
   = (P1 +/ P2)
@@ -44,8 +44,8 @@ test8 = RProxy :: ∀ v. Mod (P7 +/ P1) (P6 +/ P1) v => RProxy v
 test9_1 :: PeanoProxy Pe2
 test9_1 = PeanoProxy :: forall c. Numerator (P2 +/ P7) c => PeanoProxy c
 
-test9_2 :: RProxy (P3 +/ P1)
-test9_2 = RProxy :: forall c. PeanoToRational Pe3 c => RProxy c
+test9_2 :: PIntProxy P4
+test9_2 = PIntProxy :: forall c. PeanoToPInt Pe3 c => PIntProxy c
 
 test9 :: PeanoProxy Pe2
 test9 = PeanoProxy :: forall c. GCD Pe8 Pe6 c => PeanoProxy c
@@ -59,13 +59,45 @@ test9_4 = PeanoProxy :: forall c. GCD Pe7 Pe5 c => PeanoProxy c
 test9_5 :: PeanoProxy Pe2
 test9_5 = PeanoProxy :: forall c. PeanoDiv Pe8 Pe4 c => PeanoProxy c
 
-{-
 test9_6 :: PeanoProxy Pe4
 test9_6 = PeanoProxy :: forall c. PeanoDiv Pe8 Pe2 c => PeanoProxy c
 
-test10 :: RProxy (P3 +/ P1)
-test10 = RProxy :: forall c. Reduce (P9 +/ P3) c => RProxy c
--}
+test9_7 :: PeanoProxy Pe3
+test9_7 = PeanoProxy :: forall c. PeanoDiv Pe9 Pe3 c => PeanoProxy c
+
+test10_1 :: PeanoProxy Pe9
+test10_1 = PeanoProxy :: forall c. Numerator (P9 +/ P3) c => PeanoProxy c
+
+test10_2 :: PeanoProxy Pe3
+test10_2 = PeanoProxy :: forall c. Denominator (P9 +/ P3) c => PeanoProxy c
+
+test10_3 :: PeanoProxy Pe3
+test10_3 = PeanoProxy :: forall c. GCD Pe9 Pe3 c => PeanoProxy c
+
+test10_4 :: PeanoProxy Pe3
+test10_4 = PeanoProxy :: forall c. PeanoDiv Pe9 Pe3 c => PeanoProxy c
+
+test10_5 :: PeanoProxy Pe1
+test10_5 = PeanoProxy :: forall c. PeanoDiv Pe3 Pe3 c => PeanoProxy c
+
+test10_6 :: PIntProxy P4
+test10_6 = PIntProxy :: forall c. PeanoToPInt Pe3 c => PIntProxy c
+
+test10_7 :: PIntProxy P2
+test10_7 = PIntProxy :: forall c. PeanoToPInt Pe1 c => PIntProxy c
+
+test10_8 :: RProxy (P3 +/ P1)
+test10_8 = RProxy :: forall c. Sub (P4 +/ P1) (P1 +/ P1) c => RProxy c
+
+test10_9 :: RProxy (P1 +/ P1)
+test10_9 = RProxy :: forall c. Sub (P2 +/ P1) (P1 +/ P1) c => RProxy c
+
+test10_10 :: RProxy (P3 +/ P1)
+test10_10 = RProxy :: forall c. Div (P3 +/ P1) (P1 +/ P1) c => RProxy c
+
+--Numerator a num, Denominator a den, GCD num den gcd, PeanoDiv num gcd q, PeanoDiv den gcd r, PeanoToRationalPlusOne q qrat_, PeanoToRationalPlusOne r rrat_, Sub qrat_ (PRational POne POne) qrat, Sub rrat_ (PRational POne POne) rrat, Div qrat rrat b
+--test10 :: RProxy (P3 +/ P1)
+--test10 = RProxy :: forall c. Reduce (P9 +/ P3) c => RProxy c
 testf0 :: CRProxy (Lt (P3 +/ P2)) -> CRProxy (Lt Zero)
 testf0 _ = CRProxy
 

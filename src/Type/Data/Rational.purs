@@ -666,6 +666,9 @@ data RProxy (r :: Rational)
 data PeanoProxy (r :: Peano)
   = PeanoProxy
 
+data PIntProxy (r :: PInt)
+  = PIntProxy
+
 ----- flips a positive int to a negative int
 class ToP (a :: NInt) (b :: PInt) | a -> b
 
@@ -1346,13 +1349,13 @@ instance invN :: (ToP a x, ToN b y) => Inv (NRational a b) (NRational y x)
 ----- divide two rationals
 class Div (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
 
-instance div :: (Mul a b c, Inv c d) => Div a b d
+instance div :: (Inv b c, Mul a c d) => Div a b d
 
 class PeanoDiv (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
 
-instance peanoDivZ :: (PeanoDivInternal ZeroPeano ZeroPeano a (SuccPeano b) c) => PeanoDiv ZeroPeano (SuccPeano b) ZeroPeano
+instance peanoDivZ :: PeanoDiv ZeroPeano b ZeroPeano
 
-instance peanoDivS :: (PeanoDivInternal ZeroPeano (SuccPeano ZeroPeano) a (SuccPeano b) c) => PeanoDiv (SuccPeano a) (SuccPeano b) c
+instance peanoDivS :: (PeanoDivInternal (SuccPeano a) b b q) => PeanoDiv (SuccPeano a) b q
 
 class PeanoEq (q :: Peano) (r :: Peano) (b :: Boolean) | q r -> b
 
@@ -1366,15 +1369,15 @@ instance pe3 :: PeanoEq a b c => PeanoEq (SuccPeano a) (SuccPeano b) c
 
 class Reduce (a :: Rational) (b :: Rational) | a -> b
 
-instance reduceReduce :: (Numerator a num, Denominator a den, GCD num den gcd, PeanoDiv num gcd q, PeanoDiv den gcd r, PeanoToRational q qrat, PeanoToRational r rrat, Div qrat rrat b) => Reduce a b
+instance reduceReduce :: (Numerator a num, Denominator a den, GCD num den gcd, PeanoDiv num gcd q, PeanoDiv den gcd r, PeanoToPInt q qrat_, PeanoToPInt r rrat_, Sub (PRational qrat_ P1) (PRational POne POne) qrat, Sub (PRational rrat_ POne) (PRational POne POne) rrat, Div qrat rrat b) => Reduce a b
 
-class PeanoDivInternal (q :: Peano) (r :: Peano) (a :: Peano) (b :: Peano) (c :: Peano) | q r a b -> c
+class PeanoDivInternal (a :: Peano) (b :: Peano) (r :: Peano) (q :: Peano) | a b r -> q
 
-instance peanoDivInternalZ :: PeanoDivInternal q r ZeroPeano b q
+instance peanoDivInternalDone :: PeanoDivInternal ZeroPeano b r q
 
--- backwards, can't ever increase on left
-XX
-instance peanoDivInternalDown :: (PeanoEq b r eq, GateP eq (SuccPeano q) q newq, GateP eq ZeroPeano (SuccPeano r) newr, GateP eq (SuccPeano a) a newa, PeanoDivInternal newq newr newa b c) => PeanoDivInternal q r (SuccPeano a) b c
+instance peanoDivInternalQuotient :: PeanoDivInternal a b b q => PeanoDivInternal (SuccPeano a) b ZeroPeano (SuccPeano q)
+
+instance peanoDivInternalRemainder :: PeanoDivInternal a b r q => PeanoDivInternal (SuccPeano a) b (SuccPeano r) q
 
 class GCD (a :: Peano) (b :: Peano) (c :: Peano) | a b -> c
 
@@ -1382,11 +1385,25 @@ instance gcdZero :: GCD ZeroPeano b b
 
 instance gcdPos :: (GCDLoop False (SuccPeano a) (SuccPeano a) (SuccPeano b) c) => GCD (SuccPeano a) (SuccPeano b) c
 
-class PeanoToRational (p :: Peano) (r :: Rational) | p -> r
+class PeanoToPInt (p :: Peano) (r :: PInt) | p -> r
+
+instance peanoToRationalZero :: PeanoToPInt ZeroPeano POne
+
+instance peanoToRationalSuc1 :: PeanoToPInt a b => PeanoToPInt (SuccPeano a) (PSuc b)
 
 class Numerator (r :: Rational) (p :: Peano) | r -> p
 
+instance numeratorZero :: Numerator Zero ZeroPeano
+
+instance numeratorSuc :: Numerator (PRational POne x) (SuccPeano ZeroPeano)
+
+instance numeratorSuc1 :: Numerator (PRational b x) (SuccPeano a) => Numerator (PRational (PSuc b) x) (SuccPeano (SuccPeano a))
+
 class Denominator (r :: Rational) (p :: Peano) | r -> p
+
+instance demoninatorSuc :: Denominator (PRational x POne) (SuccPeano ZeroPeano)
+
+instance demoninatorSuc1 :: Denominator (PRational x b) (SuccPeano a) => Denominator (PRational x (PSuc b)) (SuccPeano (SuccPeano a))
 
 class IsZeroPeano (p :: Peano) (b :: Boolean) | p -> b
 
@@ -1394,27 +1411,11 @@ instance isZeroPeanoZero :: IsZeroPeano ZeroPeano True
 
 instance isZeroPeanoSuc :: IsZeroPeano (SuccPeano a) False
 
-instance numeratorZero :: Numerator Zero ZeroPeano
-
-instance numeratorSuc :: Numerator (PRational POne x) (SuccPeano ZeroPeano)
-
-instance demoninatorSuc :: Denominator (PRational x POne) (SuccPeano ZeroPeano)
-
-instance numeratorSuc1 :: Numerator (PRational b x) (SuccPeano a) => Numerator (PRational (PSuc b) x) (SuccPeano (SuccPeano a))
-
-instance demoninatorSuc1 :: Denominator (PRational x b) (SuccPeano a) => Denominator (PRational x (PSuc b)) (SuccPeano (SuccPeano a))
-
-instance peanoToRationalZero :: PeanoToRational ZeroPeano Zero
-
-instance peanoToRationalSuc :: PeanoToRational (SuccPeano ZeroPeano) (PRational POne POne)
-
-instance peanoToRationalSuc1 :: PeanoToRational (SuccPeano a) (PRational b POne) => PeanoToRational (SuccPeano (SuccPeano a)) (PRational (PSuc b) POne)
-
 class GCDLoop (gate :: Boolean) (default :: Peano) (a :: Peano) (b :: Peano) (c :: Peano) | gate default a b -> c
 
 instance gcdLoopTrue :: GCDLoop True default a b default
 
-instance gcdLoopFalse :: (PeanoToRational a rata, PeanoToRational b ratb, Mod rata ratb c, Numerator c num, IsZeroPeano num isZero, GCDLoop isZero b b num d) => GCDLoop False default a b d
+instance gcdLoopFalse :: (PeanoToPInt a rata_, Sub (PRational rata_ P1) (PRational P1 P1) rata, PeanoToPInt b ratb_, Sub (PRational ratb_ P1) (PRational P1 P1) ratb, Mod rata ratb c, Numerator c num, IsZeroPeano num isZero, GCDLoop isZero b b num d) => GCDLoop False default a b d
 
 class Mod (a :: Rational) (b :: Rational) (c :: Rational) | a b -> c
 
